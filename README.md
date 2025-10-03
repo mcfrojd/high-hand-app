@@ -41,7 +41,7 @@ Vi installerar en modern LTS-version (Long Term Support) av Node.js.
 
 1. **Installera `curl` (om det inte redan finns):**
 ```
-apt install curl -y
+apt install curl git -y
 ```
 
 2. **Ladda ner och kör installationsskriptet för Node.js 18.x:**
@@ -63,8 +63,10 @@ npm -v
 ___
 ### Steg 4: Överför applikationsfilerna
 
-Du behöver kopiera `high-hand-app`-mappen från din dator till LXC-containern.
-(För Windows-användare: Ett program som_ [_WinSCP_](https://winscp.net/ "null") kan användas för att göra detta via ett grafiskt gränssnitt).
+Klona filerna från github.
+```
+git clone https://github.com/mcfrojd/high-hand-app.git
+```
 ___
 ### Steg 5: Kör Applikationen och gör den permanent
 
