@@ -110,5 +110,5 @@ Du kan kontrollera statusen för din app när som helst med kommandot `pm2 statu
 
 Du når nu din applikation på:
 
-- **Display-sidan:** `http://<LXC_IP_ADRESS>:3000/display.html`
-- **Admin-sidan:** `http://<LXC_IP_ADRESS>:3000/admin.html`
+- **Display-sidan:** `http://<LXC_IP_ADRESS>/display.html`
+- **Admin-sidan:** `http://<LXC_IP_ADRESS>/admin.html`
