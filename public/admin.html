@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="sv" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - High Hand</title>
+    <link rel="icon" href="/images/misc/logo.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="description" content="Adminpanel för Poker High Hand Display">
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="h-full flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+
+    <div class="w-full max-w-lg bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Uppdatera High Hand</h1>
+            <div class="flex items-center gap-4">
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm p-2.5">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 5.05a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z"></path></svg>
+                </button>
+                <div id="connection-status" class="w-4 h-4 rounded-full bg-red-500 transition-colors" title="Frånkopplad"></div>
+                <!-- Återställ-knapp -->
+                <button id="reset-btn" type="button" class="ml-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors">
+                    Återställ
+                </button>
+            </div>
+        </div>
+        
+        <form id="high-hand-form">
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="player-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Spelarens namn</label>
+                        <div class="relative">
+                            <input type="text" id="player-name" name="player-name" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="Namn" autocomplete="off">
+                            <div id="player-suggestions" class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 hidden max-h-60 overflow-y-auto shadow-lg">
+                                <!-- Autocomplete suggestions will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="participant-count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Antal deltagare</label>
+                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="0">
+                    </div>
+                </div>
+                <div>
+                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kort</label>
+                     <div id="cards-input" class="grid grid-cols-5 gap-2"></div>
+                </div>
+                <div>
+                    <label for="background-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bakgrundsbild (Display)</label>
+                    <select id="background-select" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
+                        <option value="">Ingen bakgrund (mörk)</option>
+                    </select>
+                    <p id="background-error" class="text-xs text-red-500 mt-1 h-4"></p>
+                </div>
+            </div>
+            <button type="submit" id="submit-btn" class="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600" disabled>
+                Ansluter till servern...
+            </button>
+        </form>
+        <p id="status-message" class="mt-4 text-center text-sm font-medium h-5"></p>
+    </div>
+
+    <script type="module">
+        // --- Dark Mode ---
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+            if (localStorage.getItem('theme')) {
+                if (localStorage.getItem('theme') === 'light') { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); }
+            } else {
+                if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } else { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); }
+            }
+        });
+
+        // --- Applikationslogik ---
+        const highHandForm = document.getElementById('high-hand-form');
+        const statusMessage = document.getElementById('status-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const connectionStatusEl = document.getElementById('connection-status');
+        const backgroundSelect = document.getElementById('background-select');
+        const backgroundError = document.getElementById('background-error');
+        const playerNameInput = document.getElementById('player-name');
+        const playerSuggestionsContainer = document.getElementById('player-suggestions');
+        let socket;
+        let playerNames = [];
+
+        const cardsInputContainer = document.getElementById('cards-input');
+        const ranks = ['N/A', 'A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const suits = [{ symbol: 'N/A', name: 'N/A' }, { symbol: '♠', name: 'Spades' }, { symbol: '♥', name: 'Hearts' }, { symbol: '♦', name: 'Diamonds' }, { symbol: '♣', name: 'Clubs' }];
+        for (let i = 1; i <= 5; i++) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'flex flex-col gap-1';
+            const rankSelect = document.createElement('select');
+            rankSelect.id = `card-rank-${i}`;
+            rankSelect.className = 'w-full text-center px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200';
+            ranks.forEach(rank => { const option = document.createElement('option'); option.value = rank; option.textContent = rank; rankSelect.appendChild(option); });
+            const suitSelect = document.createElement('select');
+            suitSelect.id = `card-suit-${i}`;
+            suitSelect.className = 'w-full text-center px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200';
+            suits.forEach(suit => { const option = document.createElement('option'); option.value = suit.symbol; option.textContent = suit.symbol; suitSelect.appendChild(option); });
+            cardWrapper.appendChild(rankSelect);
+            cardWrapper.appendChild(suitSelect);
+            cardsInputContainer.appendChild(cardWrapper);
+        }
+
+        // Efter att kort-selects skapats:
+        for (let i = 1; i <= 5; i++) {
+            const rankSelect = document.getElementById(`card-rank-${i}`);
+            const suitSelect = document.getElementById(`card-suit-${i}`);
+
+            // När rank ändras från "N/A" till något annat
+            rankSelect.addEventListener('change', function () {
+                if (this.value !== 'N/A') {
+                    // Hämta alla redan använda suits för denna valör (exkludera nuvarande kort)
+                    const usedSuits = [];
+                    for (let j = 1; j <= 5; j++) {
+                        if (j === i) continue;
+                        const otherRank = document.getElementById(`card-rank-${j}`).value;
+                        const otherSuit = document.getElementById(`card-suit-${j}`).value;
+                        if (otherRank === this.value && otherSuit !== 'N/A') {
+                            usedSuits.push(otherSuit);
+                        }
+                    }
+                    // Lista möjliga suits (exkludera N/A och redan använda)
+                    const possibleSuits = suits
+                        .map(s => s.symbol)
+                        .filter(s => s !== 'N/A' && !usedSuits.includes(s));
+                    // Om nuvarande suit är N/A eller redan upptagen, välj en ledig suit slumpmässigt
+                    if (
+                        suitSelect.value === 'N/A' ||
+                        usedSuits.includes(suitSelect.value)
+                    ) {
+                        if (possibleSuits.length > 0) {
+                            // Välj slumpmässig ledig suit
+                            const randomSuit = possibleSuits[Math.floor(Math.random() * possibleSuits.length)];
+                            suitSelect.value = randomSuit;
+                        } else {
+                            // Om alla suits är upptagna, sätt till N/A
+                            suitSelect.value = 'N/A';
+                        }
+                    }
+                } else {
+                    // Om rank sätts till N/A, sätt även suit till N/A
+                    suitSelect.value = 'N/A';
+                }
+
+                // Kontrollera att det inte finns dubbletter av rank+suit, annars rätta till
+                fixDuplicateRanks();
+            });
+
+            // När suit ändras manuellt, kontrollera att det inte blir dubblett
+            suitSelect.addEventListener('change', function () {
+                fixDuplicateRanks();
+            });
+        }
+
+        // Hjälpfunktion för att rätta till dubbletter av rank+suit
+        function fixDuplicateRanks() {
+            // Samla alla rank+suit-kombinationer
+            const combos = {};
+            for (let i = 1; i <= 5; i++) {
+                const rank = document.getElementById(`card-rank-${i}`).value;
+                const suit = document.getElementById(`card-suit-${i}`).value;
+                if (rank === 'N/A' || suit === 'N/A') continue;
+                const key = `${rank}_${suit}`;
+                if (combos[key]) {
+                    // Dubblett hittad, byt suit på detta kort till en ledig
+                    const usedSuits = [];
+                    for (let j = 1; j <= 5; j++) {
+                        if (j === i) continue;
+                        const otherRank = document.getElementById(`card-rank-${j}`).value;
+                        const otherSuit = document.getElementById(`card-suit-${j}`).value;
+                        if (otherRank === rank && otherSuit !== 'N/A') {
+                            usedSuits.push(otherSuit);
+                        }
+                    }
+                    const possibleSuits = suits
+                        .map(s => s.symbol)
+                        .filter(s => s !== 'N/A' && !usedSuits.includes(s));
+                    if (possibleSuits.length > 0) {
+                        document.getElementById(`card-suit-${i}`).value = possibleSuits[0];
+                    } else {
+                        document.getElementById(`card-suit-${i}`).value = 'N/A';
+                    }
+                } else {
+                    combos[key] = true;
+                }
+            }
+        }
+
+        function updateForm(data) {
+            if (!data) return;
+            document.getElementById('player-name').value = data.playerName || '';
+            document.getElementById('participant-count').value = data.participantCount || 0;
+            if (data.cards && data.cards.length === 5) {
+                for (let i = 0; i < 5; i++) {
+                    document.getElementById(`card-rank-${i + 1}`).value = data.cards[i].rank;
+                    document.getElementById(`card-suit-${i + 1}`).value = data.cards[i].suit;
+                }
+            }
+            backgroundSelect.value = data.backgroundImage || '';
+        }
+
+        async function fetchPlayers() {
+            try {
+                const response = await fetch('/api/players');
+                if (!response.ok) throw new Error('Kunde inte hämta spelare');
+                playerNames = await response.json();
+                // We don't populate a datalist anymore
+            } catch (error) {
+                console.error('Fel vid hämtning av spelare:', error);
+            }
+        }
+
+        // --- Custom Autocomplete Logic ---
+        playerNameInput.addEventListener('input', () => {
+            const inputText = playerNameInput.value.toLowerCase();
+            if (inputText.length === 0) {
+                playerSuggestionsContainer.classList.add('hidden');
+                return;
+            }
+
+            const suggestions = playerNames.filter(name => name.toLowerCase().startsWith(inputText));
+            
+            playerSuggestionsContainer.innerHTML = '';
+            if (suggestions.length > 0) {
+                suggestions.forEach(suggestion => {
+                    const suggestionEl = document.createElement('div');
+                    suggestionEl.textContent = suggestion;
+                    suggestionEl.className = 'px-4 py-2 cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
+                    suggestionEl.addEventListener('click', () => {
+                        playerNameInput.value = suggestion;
+                        playerSuggestionsContainer.classList.add('hidden');
+                    });
+                    playerSuggestionsContainer.appendChild(suggestionEl);
+                });
+                playerSuggestionsContainer.classList.remove('hidden');
+            } else {
+                playerSuggestionsContainer.classList.add('hidden');
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!playerNameInput.contains(e.target) && !playerSuggestionsContainer.contains(e.target)) {
+                playerSuggestionsContainer.classList.add('hidden');
+            }
+        });
+
+
+        async function addNewPlayerIfNeeded(name) {
+            const trimmedName = name.trim();
+            if (trimmedName && !playerNames.some(p => p.toLowerCase() === trimmedName.toLowerCase())) {
+                try {
+                    const response = await fetch('/api/players', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: trimmedName })
+                    });
+                    if (response.ok) {
+                        console.log(`Spelare '${trimmedName}' tillagd.`);
+                        await fetchPlayers(); // Uppdatera datalistan med den nya spelaren
+                    }
+                } catch (error) {
+                    console.error(`Kunde inte lägga till spelare '${trimmedName}':`, error);
+                }
+            }
+        }
+
+        async function fetchBackgrounds() {
+            try {
+                const response = await fetch('/api/backgrounds');
+                if (!response.ok) { throw new Error(`Nätverksfel: HTTP-status: ${response.status}`); }
+                const backgrounds = await response.json();
+                backgrounds.forEach(bg => {
+                    const option = document.createElement('option');
+                    option.value = `/images/backgrounds/${bg}`;
+                    option.textContent = bg;
+                    backgroundSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Fel vid hämtning av bakgrundsbilder:", error);
+                backgroundError.textContent = 'Kunde inte ladda bakgrundsbilder.';
+            }
+        }
+
+        function connect(backgroundsPromise) {
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            socket = new WebSocket(`${protocol}://${window.location.host}`);
+            socket.onopen = () => {
+                connectionStatusEl.classList.replace('bg-red-500', 'bg-green-500');
+                connectionStatusEl.title = 'Ansluten';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Spara ny högsta hand';
+            };
+            socket.onmessage = async (event) => {
+                await backgroundsPromise;
+                await fetchPlayers(); // Hämta spelare när anslutningen är upprättad
+                const data = JSON.parse(event.data);
+                updateForm(data);
+            };
+            socket.onclose = () => {
+                connectionStatusEl.classList.replace('bg-green-500', 'bg-red-500');
+                connectionStatusEl.title = 'Frånkopplad';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Ansluter till servern...';
+                setTimeout(() => connect(backgroundsPromise), 3000);
+            };
+            socket.onerror = (error) => { console.error('WebSocket-fel:', error); socket.close(); };
+        }
+
+        highHandForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sparar...';
+            statusMessage.textContent = '';
+            try {
+                const playerName = document.getElementById('player-name').value;
+                await addNewPlayerIfNeeded(playerName); // Lägg till ny spelare om det behövs
+
+                const participantCount = document.getElementById('participant-count').value;
+                const cards = [];
+                for (let i = 1; i <= 5; i++) { cards.push({ rank: document.getElementById(`card-rank-${i}`).value, suit: document.getElementById(`card-suit-${i}`).value }); }
+                const backgroundImage = backgroundSelect.value;
+                const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
+                
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify(dataToSave));
+                    statusMessage.textContent = 'Högsta handen har uppdaterats!';
+                    statusMessage.className = 'mt-4 text-center text-sm font-medium h-5 text-green-600 dark:text-green-400';
+                } else { throw new Error('Ingen anslutning till servern.'); }
+            } catch (error) {
+                statusMessage.textContent = 'Ett fel uppstod.';
+                statusMessage.className = 'mt-4 text-center text-sm font-medium h-5 text-red-600 dark:text-red-400';
+            } finally {
+                 setTimeout(() => {
+                    if (socket.readyState === WebSocket.OPEN) { submitBtn.disabled = false; submitBtn.textContent = 'Spara ny högsta hand'; }
+                    statusMessage.textContent = '';
+                }, 2000);
+            }
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            // Skicka "reset"-data till displayen
+            const backgroundImage = backgroundSelect.value;
+            const dataToSave = {
+                playerName: "ANTAL ANMÄLDA",
+                participantCount: 0,
+                cards: [
+                    { rank: "N/A", suit: "N/A" },
+                    { rank: "N/A", suit: "N/A" },
+                    { rank: "N/A", suit: "N/A" },
+                    { rank: "N/A", suit: "N/A" },
+                    { rank: "N/A", suit: "N/A" }
+                ],
+                backgroundImage, // Behåll nuvarande bakgrund
+                updatedAt: new Date().toISOString(),
+                reset: true,
+                handName: "100 KR FRIVILLIG SIDOPOTT"
+            };
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(dataToSave));
+                statusMessage.textContent = 'Återställd!';
+                statusMessage.className = 'mt-4 text-center text-sm font-medium h-5 text-green-600 dark:text-green-400';
+            }
+            // Uppdatera formuläret visuellt för att matcha reset-läget
+            document.getElementById('player-name').value = "";
+            document.getElementById('participant-count').value = 0;
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`card-rank-${i}`).value = 'N/A';
+                document.getElementById(`card-suit-${i}`).value = 'N/A';
+            }
+        });
+
+        const backgroundsPromise = fetchBackgrounds();
+        connect(backgroundsPromise);
+    </script>
+</body>
+</html>
+

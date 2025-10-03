@@ -1,0 +1,30 @@
+{
+  "playerName": "ANTAL ANMÄLDA",
+  "participantCount": 0,
+  "cards": [
+    {
+      "rank": "N/A",
+      "suit": "N/A"
+    },
+    {
+      "rank": "N/A",
+      "suit": "N/A"
+    },
+    {
+      "rank": "N/A",
+      "suit": "N/A"
+    },
+    {
+      "rank": "N/A",
+      "suit": "N/A"
+    },
+    {
+      "rank": "N/A",
+      "suit": "N/A"
+    }
+  ],
+  "backgroundImage": "/images/backgrounds/room.jpg",
+  "updatedAt": "2025-09-25T12:46:46.444Z",
+  "reset": true,
+  "handName": "100 KR FRIVILLIG SIDOPOTT"
+}
