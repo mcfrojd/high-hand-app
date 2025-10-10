@@ -38,12 +38,10 @@
                 </div>
                 <div>
                     <label for="participant-count" class="block text-sm font-medium text-gray-300 mb-1">Antal deltagare</label>
-                    <div class="flex items-center mt-1">
-                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full text-center px-4 py-2 border border-gray-600 rounded-l-md focus:ring-indigo-500 focus:border-indigo-500 bg-gray-700 text-gray-200" placeholder="0">
-                        <div class="flex">
-                            <button type="button" id="decrement-btn" class="px-4 py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 border-y border-r border-gray-600">-</button>
-                            <button type="button" id="increment-btn" class="px-4 py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-r-md border-y border-r border-gray-600">+</button>
-                        </div>
+                    <div class="grid grid-cols-3 gap-2 mt-1">
+                        <button type="button" id="decrement-btn" class="w-full py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-md">-</button>
+                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full text-center px-2 py-2 border border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-gray-700 text-gray-200" placeholder="0">
+                        <button type="button" id="increment-btn" class="w-full py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-md">+</button>
                     </div>
                 </div>
                 <div>
