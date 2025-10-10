@@ -19,7 +19,7 @@
 
     <div class="w-full max-w-lg bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Uppdatera High Hand</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">Uppdatera High Hand</h1>
             <div class="flex items-center gap-2">
                 <button id="settings-toggle-btn" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm p-2.5" title="Visa/Dölj inställningar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -34,19 +34,21 @@
         
         <form id="high-hand-form">
             <div class="space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="player-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Spelarens namn</label>
-                        <div class="relative">
-                            <input type="text" id="player-name" name="player-name" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="Namn" autocomplete="off">
-                            <div id="player-suggestions" class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 hidden max-h-60 overflow-y-auto shadow-lg">
-                                <!-- Autocomplete suggestions will be injected here -->
-                            </div>
+                <div>
+                    <label for="player-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Spelarens namn</label>
+                    <div class="relative">
+                        <input type="text" id="player-name" name="player-name" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="Namn" autocomplete="off">
+                        <div id="player-suggestions" class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 hidden max-h-60 overflow-y-auto shadow-lg">
+                            <!-- Autocomplete suggestions will be injected here -->
                         </div>
                     </div>
-                    <div>
-                        <label for="participant-count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Antal deltagare</label>
-                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="0">
+                </div>
+                <div>
+                    <label for="participant-count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Antal deltagare</label>
+                    <div class="flex items-center gap-2 mt-1">
+                        <button type="button" id="decrement-btn" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-md font-bold text-lg hover:bg-gray-300 dark:hover:bg-gray-500">-</button>
+                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="0">
+                        <button type="button" id="increment-btn" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-md font-bold text-lg hover:bg-gray-300 dark:hover:bg-gray-500">+</button>
                     </div>
                 </div>
                 <div>
@@ -91,6 +93,19 @@
         const settingsToggleBtn = document.getElementById('settings-toggle-btn');
         let socket;
         let playerNames = [];
+
+        // --- Participant Count Buttons ---
+        const participantCountInput = document.getElementById('participant-count');
+        document.getElementById('decrement-btn').addEventListener('click', () => {
+            let currentValue = parseInt(participantCountInput.value, 10) || 0;
+            if (currentValue > 0) {
+                participantCountInput.value = currentValue - 1;
+            }
+        });
+        document.getElementById('increment-btn').addEventListener('click', () => {
+            let currentValue = parseInt(participantCountInput.value, 10) || 0;
+            participantCountInput.value = currentValue + 1;
+        });
 
         // --- Settings Toggle ---
         settingsToggleBtn.addEventListener('click', () => {
