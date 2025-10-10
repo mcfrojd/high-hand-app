@@ -204,6 +204,7 @@
             participantCircleEl.style.width = `${circleSize}rem`;
             participantCircleEl.style.height = `${circleSize}rem`;
             titlePlaceholderEl.style.width = `${circleSize}rem`;
+            titlePlaceholderEl.style.height = `${circleSize}rem`; // Match height for alignment
 
             // Dynamically adjust card size and gap
             const cardSize = settings.cardSize || 18;
@@ -264,7 +265,7 @@
                     data.cards.forEach(card => {
                         const filename = getCardImageFilename(card);
                         const cardHTML = `
-                            <div class="card-wrapper max-w-[180px] aspect-[2.5/3.5]" style="width: ${cardSize}vw;">
+                            <div class="card-wrapper aspect-[2.5/3.5]" style="width: ${cardSize}vw;">
                                 <img src="/images/cards/${filename}" alt="${card.rank} ${card.suit}" class="w-full h-full object-contain" loading="lazy">
                             </div>
                         `;
