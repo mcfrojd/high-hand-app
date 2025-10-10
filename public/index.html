@@ -33,6 +33,7 @@
         .items-center { align-items: center; }
         .justify-center { justify-content: center; }
         .justify-between { justify-content: space-between; }
+        .p-2 { padding: 0.5rem; }
         .p-4 { padding: 1rem; }
         .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
         .my-4 { margin-top: 1rem; margin-bottom: 1rem; }
@@ -75,6 +76,7 @@
         .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         
         @media (min-width: 640px) {
+            .sm\:p-4 { padding: 1rem; }
             .sm\:p-8 { padding: 2rem; }
             .sm\:w-24 { width: 6rem; }
             .sm\:h-24 { height: 6rem; }
@@ -98,7 +100,7 @@
 </head>
 <body class="h-full text-white">
 
-    <div id="app" class="relative w-full h-full flex flex-col text-center p-4 sm:p-8 bg-black bg-opacity-50">
+    <div id="app" class="relative w-full h-full flex flex-col text-center p-2 sm:p-4 bg-black bg-opacity-50">
         
         <!-- Simplified Header Section -->
         <div class="flex justify-center items-center">
