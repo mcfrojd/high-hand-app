@@ -67,6 +67,14 @@
             </button>
         </form>
         <p id="status-message" class="mt-4 text-center text-sm font-medium h-5"></p>
+
+        <!-- Settings Section -->
+        <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Displayinställningar</h2>
+            <div id="settings-form" class="space-y-4">
+                <!-- Settings will be populated here by JS -->
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -97,6 +105,7 @@
         const backgroundError = document.getElementById('background-error');
         const playerNameInput = document.getElementById('player-name');
         const playerSuggestionsContainer = document.getElementById('player-suggestions');
+        const settingsForm = document.getElementById('settings-form');
         let socket;
         let playerNames = [];
 
@@ -217,6 +226,62 @@
             backgroundSelect.value = data.backgroundImage || '';
         }
 
+        async function fetchAndRenderSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                if (!response.ok) throw new Error('Kunde inte hämta inställningar');
+                const settings = await response.json();
+                
+                const settingControls = [
+                    { id: 'titleFontSize', label: 'Titel (font)', min: 2, max: 12, step: 0.5, unit: 'rem' },
+                    { id: 'playerNameFontSize', label: 'Spelarnamn (font)', min: 2, max: 12, step: 0.5, unit: 'rem' },
+                    { id: 'handNameFontSize', label: 'Handnamn (font)', min: 2, max: 10, step: 0.5, unit: 'rem' },
+                    { id: 'participantCountFontSize', label: 'Deltagare (font)', min: 1, max: 8, step: 0.5, unit: 'rem' },
+                    { id: 'cardSize', label: 'Kortstorlek', min: 10, max: 30, step: 1, unit: 'vw' }
+                ];
+
+                settingsForm.innerHTML = ''; // Rensa gamla kontroller
+                settingControls.forEach(({ id, label, min, max, step, unit }) => {
+                    const value = settings[id] || 0;
+                    const controlHtml = `
+                        <div class="grid grid-cols-3 items-center gap-4">
+                            <label for="setting-${id}" class="text-sm font-medium text-gray-700 dark:text-gray-300 col-span-1">${label}</label>
+                            <input type="range" id="setting-${id}" data-setting-id="${id}" min="${min}" max="${max}" step="${step}" value="${value}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 col-span-1">
+                            <span class="text-sm text-gray-500 dark:text-gray-400 col-span-1"><span id="value-${id}">${value}</span> ${unit}</span>
+                        </div>
+                    `;
+                    settingsForm.insertAdjacentHTML('beforeend', controlHtml);
+                });
+
+                // Add event listeners after creating the controls
+                document.querySelectorAll('#settings-form input[type="range"]').forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        const id = e.target.dataset.settingId;
+                        document.getElementById(`value-${id}`).textContent = e.target.value;
+                    });
+                    input.addEventListener('change', handleSettingChange);
+                });
+
+            } catch (error) {
+                console.error('Fel vid hämtning av inställningar:', error);
+            }
+        }
+
+        async function handleSettingChange(event) {
+            const id = event.target.dataset.settingId;
+            const value = parseFloat(event.target.value);
+            
+            try {
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [id]: value })
+                });
+            } catch (error) {
+                console.error(`Kunde inte spara inställning ${id}:`, error);
+            }
+        }
+
         async function fetchPlayers() {
             try {
                 const response = await fetch('/api/players');
@@ -312,8 +377,14 @@
             socket.onmessage = async (event) => {
                 await backgroundsPromise;
                 await fetchPlayers(); // Hämta spelare när anslutningen är upprättad
+                await fetchAndRenderSettings(); // Hämta inställningar
                 const data = JSON.parse(event.data);
-                updateForm(data);
+                // Initial message contains both high hand and settings
+                if (data.type === 'initialState') {
+                    updateForm(data.payload.highHand);
+                } else if (data.type === 'handUpdate') {
+                    updateForm(data.payload);
+                }
             };
             socket.onclose = () => {
                 connectionStatusEl.classList.replace('bg-green-500', 'bg-red-500');
@@ -341,7 +412,7 @@
                 const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
                 
                 if (socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify(dataToSave));
+                    socket.send(JSON.stringify(dataToSave)); // This now sends a generic message
                     statusMessage.textContent = 'Högsta handen har uppdaterats!';
                     statusMessage.className = 'mt-4 text-center text-sm font-medium h-5 text-green-600 dark:text-green-400';
                 } else { throw new Error('Ingen anslutning till servern.'); }

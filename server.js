@@ -16,14 +16,11 @@ const wss = new WebSocket.Server({ server });
 // Sökväg till våra "databas"-filer
 const dbFilePath = path.join(__dirname, 'data', 'db.json');
 const playersDbPath = path.join(__dirname, 'data', 'players.json');
+const settingsDbPath = path.join(__dirname, 'data', 'settings.json');
 
-// Start-data ifall db.json är tom eller inte finns
-let currentHighHand = {
-    playerName: '',
-    cards: [],
-    backgroundImage: '',
-    participantCount: 0
-};
+// Start-data ifall filer är tomma eller inte finns
+let currentHighHand = {};
+let currentSettings = {};
 
 // --- DATABAS-FUNKTIONER ---
 
@@ -42,15 +39,40 @@ function readDataFromFile() {
     try {
         if (fs.existsSync(dbFilePath)) {
             const data = fs.readFileSync(dbFilePath, 'utf8');
-            const parsedData = JSON.parse(data);
-            // Slå ihop standardvärden med den sparade datan
-            currentHighHand = { ...currentHighHand, ...parsedData };
-            console.log('Data laddades från db.json:', currentHighHand);
+            currentHighHand = JSON.parse(data);
+        } else {
+            // Skapa en standard high-hand om filen inte finns
+            currentHighHand = { playerName: "VÄSTANFORS POKER KLUBB", participantCount: 0, cards: Array(5).fill({ rank: "N/A", suit: "N/A" }), backgroundImage: "/images/backgrounds/room.jpg", updatedAt: new Date().toISOString() };
+            saveDataToFile();
         }
     } catch (error) {
         console.error('Kunde inte läsa från db.json:', error);
     }
 }
+
+// --- SETTINGS-FUNKTIONER ---
+function readSettingsFromFile() {
+    try {
+        if (fs.existsSync(settingsDbPath)) {
+            const data = fs.readFileSync(settingsDbPath, 'utf8');
+            currentSettings = JSON.parse(data);
+        } else {
+            currentSettings = { titleFontSize: 6, participantCountFontSize: 4, handNameFontSize: 5, playerNameFontSize: 6, cardSize: 18 };
+            saveSettingsToFile();
+        }
+    } catch (error) {
+        console.error('Kunde inte läsa från settings.json:', error);
+    }
+}
+
+function saveSettingsToFile() {
+    try {
+        fs.writeFileSync(settingsDbPath, JSON.stringify(currentSettings, null, 2), 'utf8');
+    } catch (error) {
+        console.error('Kunde inte spara till settings.json:', error);
+    }
+}
+
 
 // --- PLAYER-FUNKTIONER ---
 
@@ -79,6 +101,7 @@ function savePlayersToFile(players) {
 
 // Läs in datan när servern startar
 readDataFromFile();
+readSettingsFromFile();
 
 // --- WEBSERVER & API ---
 
@@ -112,6 +135,29 @@ app.post('/api/players', (req, res) => {
     }
 });
 
+// API-endpoint för att hämta inställningar
+app.get('/api/settings', (req, res) => {
+    res.json(currentSettings);
+});
+
+// API-endpoint för att uppdatera inställningar
+app.post('/api/settings', (req, res) => {
+    const newSettings = req.body;
+    // Validering och sanering kan läggas till här
+    currentSettings = { ...currentSettings, ...newSettings };
+    saveSettingsToFile();
+
+    // Skicka uppdaterade inställningar till alla anslutna display-klienter
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'settingsUpdate', payload: currentSettings }));
+        }
+    });
+
+    res.status(200).json({ message: 'Inställningar uppdaterade', settings: currentSettings });
+});
+
+
 // API-endpoint för att hämta listan på bakgrundsbilder
 app.get('/api/backgrounds', (req, res) => {
     const backgroundsPath = path.join(__dirname, 'public/images/backgrounds');
@@ -132,37 +178,34 @@ app.get('/api/backgrounds', (req, res) => {
 });
 
 
-// --- WEBSOCKET-LOGIK ---
-
+// --- WEBSOCKET-SERVER ---
 wss.on('connection', (ws) => {
-    console.log('En ny klient anslöt.');
+    console.log('En klient kopplade upp sig.');
+    // Skicka aktuell status (både high hand och inställningar) till den nya klienten
+    const initialState = {
+        type: 'initialState',
+        payload: {
+            highHand: currentHighHand,
+            settings: currentSettings
+        }
+    };
+    ws.send(JSON.stringify(initialState));
 
-    // Skicka den nuvarande sparade handen till den nya klienten
-    if (currentHighHand) {
-        ws.send(JSON.stringify(currentHighHand));
-    }
-
-    // Hantera meddelanden från klienter (admin-panelen)
     ws.on('message', (message) => {
-        console.log('Tog emot meddelande -> %s', message);
-        
         try {
-            const highHandData = JSON.parse(message);
-            
-            // Spara den nya datan i minnet
-            currentHighHand = highHandData;
-            
-            // Spara den nya datan till filen
-            saveDataToFile();
+            const data = JSON.parse(message);
+            // Uppdatera currentHighHand med den nya datan
+            currentHighHand = data;
+            saveDataToFile(); // Spara till db.json
 
-            // Skicka ut (broadcast) den uppdaterade datan till ALLA anslutna klienter
-            wss.clients.forEach((client) => {
+            // Skicka den uppdaterade high-hand-datan till alla anslutna klienter
+            wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(currentHighHand));
+                    client.send(JSON.stringify({ type: 'handUpdate', payload: currentHighHand }));
                 }
             });
         } catch (error) {
-            console.error('Kunde inte tolka meddelandet som JSON:', error);
+            console.error('Fel vid hantering av meddelande:', error);
         }
     });
 
