@@ -100,20 +100,10 @@
 
     <div id="app" class="relative w-full h-full flex flex-col text-center p-4 sm:p-8 bg-black bg-opacity-50">
         
-        <div class="flex justify-between items-center">
-            <div id="title-placeholder" class="flex-shrink-0"></div>
-            
-            <!-- Centering container for the title -->
-            <div class="flex-grow flex justify-center">
-                <div id="title" class="font-bold tracking-wider uppercase text-yellow-400 leading-none">
-                    KVÄLLENS HIGH HAND
-                </div>
-            </div>
-
-            <div id="participant-circle-container" class="hidden flex-shrink-0">
-                <div id="participant-circle" class="bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center shadow-2xl">
-                    <span id="participant-count" class="font-bold leading-none"></span>
-                </div>
+        <!-- Simplified Header Section -->
+        <div class="flex justify-center items-center">
+            <div id="title" class="font-bold tracking-wider uppercase text-yellow-400 leading-none">
+                KVÄLLENS HIGH HAND
             </div>
         </div>
 
@@ -123,8 +113,15 @@
             </div>
         </div>
 
-        <div id="handname-section" class="flex items-center justify-center my-2 min-h-[4rem]">
+        <!-- Hand Name Section with Participant Circle -->
+        <div id="handname-section" class="flex justify-between items-center my-2 min-h-[4rem]">
+            <div id="handname-placeholder" class="flex-shrink-0"></div>
             <div id="hand-name" class="font-extrabold text-yellow-300 uppercase tracking-wide"></div>
+            <div id="participant-circle-container" class="hidden flex-shrink-0">
+                <div id="participant-circle" class="bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center shadow-2xl">
+                    <span id="participant-count" class="font-bold leading-none"></span>
+                </div>
+            </div>
         </div>
         
         <div id="player-section" class="min-h-[6rem] sm:min-h-[8rem] flex items-center justify-center">
@@ -142,7 +139,8 @@
         const participantCircleContainer = document.getElementById('participant-circle-container');
         const participantCircleEl = document.getElementById('participant-circle');
         const participantCountEl = document.getElementById('participant-count');
-        const titlePlaceholderEl = document.getElementById('title-placeholder');
+        const titlePlaceholderEl = document.getElementById('title-placeholder'); // This will be null, need to update
+        const handnamePlaceholderEl = document.getElementById('handname-placeholder');
         const bodyEl = document.body;
         const handNameEl = document.getElementById('hand-name');
         let currentHandState = {};
@@ -208,8 +206,11 @@
             const circleSize = (settings.participantCountFontSize || 4) * 1.5; // Multiplier for sizing
             participantCircleEl.style.width = `${circleSize}rem`;
             participantCircleEl.style.height = `${circleSize}rem`;
-            titlePlaceholderEl.style.width = `${circleSize}rem`;
-            titlePlaceholderEl.style.height = `${circleSize}rem`; // Match height for alignment
+            // Update the new placeholder in the handname section
+            if (handnamePlaceholderEl) {
+                handnamePlaceholderEl.style.width = `${circleSize}rem`;
+                handnamePlaceholderEl.style.height = `${circleSize}rem`;
+            }
 
             // Dynamically adjust card size and gap
             const cardSize = settings.cardSize || 18;
