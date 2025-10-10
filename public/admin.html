@@ -26,7 +26,7 @@
         </div>
         
         <form id="high-hand-form">
-            <div class="space-y-6">
+            <div id="main-form-fields" class="space-y-6">
                 <div>
                     <label for="player-name" class="block text-sm font-medium text-gray-300 mb-1">Spelarens namn</label>
                     <div class="relative">
@@ -86,6 +86,7 @@
         const settingsForm = document.getElementById('settings-form');
         const settingsSection = document.getElementById('settings-section');
         const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+        const mainFormFields = document.getElementById('main-form-fields');
         let socket;
         let playerNames = [];
 
@@ -105,6 +106,8 @@
         // --- Settings Toggle ---
         settingsToggleBtn.addEventListener('click', () => {
             settingsSection.classList.toggle('hidden');
+            mainFormFields.classList.toggle('hidden');
+            submitBtn.classList.toggle('hidden');
         });
 
         // --- Background Image Change ---
