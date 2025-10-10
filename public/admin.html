@@ -89,6 +89,19 @@
         let socket;
         let playerNames = [];
 
+        // --- Helper function to set suit color on the select element ---
+        function setSuitSelectColor(selectElement) {
+            const selectedSuit = suits.find(s => s.symbol === selectElement.value);
+            // First, remove any existing color classes
+            selectElement.classList.remove('text-black', 'text-red-500', 'text-gray-200');
+            // Then, add the correct one
+            if (selectedSuit && selectedSuit.color) {
+                selectElement.classList.add(selectedSuit.color);
+            } else {
+                selectElement.classList.add('text-gray-200'); // Default color for N/A
+            }
+        }
+
         // --- Participant Count Buttons ---
         const participantCountInput = document.getElementById('participant-count');
         document.getElementById('decrement-btn').addEventListener('click', () => {
@@ -147,6 +160,9 @@
                 }
                 suitSelect.appendChild(option); 
             });
+            // Add event listener to update color on change
+            suitSelect.addEventListener('change', () => setSuitSelectColor(suitSelect));
+
             cardWrapper.appendChild(rankSelect);
             cardWrapper.appendChild(suitSelect);
             cardsInputContainer.appendChild(cardWrapper);
@@ -187,10 +203,12 @@
                             // Om alla suits är upptagna, sätt till N/A
                             suitSelect.value = 'N/A';
                         }
+                        setSuitSelectColor(suitSelect); // Update color
                     }
                 } else {
                     // Om rank sätts till N/A, sätt även suit till N/A
                     suitSelect.value = 'N/A';
+                    setSuitSelectColor(suitSelect); // Update color
                 }
 
                 // Kontrollera att det inte finns dubbletter av rank+suit, annars rätta till
@@ -231,6 +249,7 @@
                     } else {
                         document.getElementById(`card-suit-${i}`).value = 'N/A';
                     }
+                    setSuitSelectColor(document.getElementById(`card-suit-${i}`)); // Update color
                 } else {
                     combos[key] = true;
                 }
@@ -244,7 +263,9 @@
             if (data.cards && data.cards.length === 5) {
                 for (let i = 0; i < 5; i++) {
                     document.getElementById(`card-rank-${i + 1}`).value = data.cards[i].rank;
-                    document.getElementById(`card-suit-${i + 1}`).value = data.cards[i].suit;
+                    const suitSelect = document.getElementById(`card-suit-${i + 1}`);
+                    suitSelect.value = data.cards[i].suit;
+                    setSuitSelectColor(suitSelect); // Set initial color
                 }
             }
             backgroundSelect.value = data.backgroundImage || '';
@@ -479,7 +500,9 @@
             document.getElementById('participant-count').value = 0;
             for (let i = 1; i <= 5; i++) {
                 document.getElementById(`card-rank-${i}`).value = 'N/A';
-                document.getElementById(`card-suit-${i}`).value = 'N/A';
+                const suitSelect = document.getElementById(`card-suit-${i}`);
+                suitSelect.value = 'N/A';
+                setSuitSelectColor(suitSelect); // Reset color
             }
         });
 
