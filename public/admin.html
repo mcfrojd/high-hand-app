@@ -50,13 +50,6 @@
                      <label class="block text-sm font-medium text-gray-300 mb-2">Kort</label>
                      <div id="cards-input" class="grid grid-cols-5 gap-2"></div>
                 </div>
-                <div>
-                    <label for="background-select" class="block text-sm font-medium text-gray-300 mb-1">Bakgrundsbild (Display)</label>
-                    <select id="background-select" class="w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-gray-700 text-gray-200">
-                        <option value="">Ingen bakgrund (mörk)</option>
-                    </select>
-                    <p id="background-error" class="text-xs text-red-500 mt-1 h-4"></p>
-                </div>
             </div>
             <button type="submit" id="submit-btn" class="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-600" disabled>
                 Ansluter till servern...
@@ -69,6 +62,13 @@
             <h2 class="text-xl font-bold text-gray-100 mb-4">Displayinställningar</h2>
             <div id="settings-form" class="space-y-4">
                 <!-- Settings will be populated here by JS -->
+            </div>
+            <div class="mt-4">
+                <label for="background-select" class="block text-sm font-medium text-gray-300 mb-1">Bakgrundsbild</label>
+                <select id="background-select" class="w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-gray-700 text-gray-200">
+                    <option value="">Ingen bakgrund (mörk)</option>
+                </select>
+                <p id="background-error" class="text-xs text-red-500 mt-1 h-4"></p>
             </div>
         </div>
     </div>
@@ -105,6 +105,21 @@
         // --- Settings Toggle ---
         settingsToggleBtn.addEventListener('click', () => {
             settingsSection.classList.toggle('hidden');
+        });
+
+        // --- Background Image Change ---
+        backgroundSelect.addEventListener('change', () => {
+            // When background changes, send a full update immediately
+            const playerName = document.getElementById('player-name').value;
+            const participantCount = document.getElementById('participant-count').value;
+            const cards = [];
+            for (let i = 1; i <= 5; i++) { cards.push({ rank: document.getElementById(`card-rank-${i}`).value, suit: document.getElementById(`card-suit-${i}`).value }); }
+            const backgroundImage = backgroundSelect.value;
+            const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(dataToSave));
+            }
         });
 
         const cardsInputContainer = document.getElementById('cards-input');
