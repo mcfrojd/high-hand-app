@@ -19,7 +19,7 @@
 
     <div class="w-full max-w-lg bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">Uppdatera High Hand</h1>
+            <h1 class="text-2xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Uppdatera High Hand</h1>
             <div class="flex items-center gap-2">
                 <button id="settings-toggle-btn" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm p-2.5" title="Visa/Dölj inställningar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -45,10 +45,12 @@
                 </div>
                 <div>
                     <label for="participant-count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Antal deltagare</label>
-                    <div class="flex items-center gap-2 mt-1">
-                        <button type="button" id="decrement-btn" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-md font-bold text-lg hover:bg-gray-300 dark:hover:bg-gray-500">-</button>
-                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="0">
-                        <button type="button" id="increment-btn" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded-md font-bold text-lg hover:bg-gray-300 dark:hover:bg-gray-500">+</button>
+                    <div class="flex items-center mt-1">
+                        <input type="number" id="participant-count" name="participant-count" min="0" class="w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="0">
+                        <div class="flex">
+                            <button type="button" id="decrement-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-500 border-y border-r border-gray-300 dark:border-gray-600">-</button>
+                            <button type="button" id="increment-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-500 rounded-r-md border-y border-r border-gray-300 dark:border-gray-600">+</button>
+                        </div>
                     </div>
                 </div>
                 <div>
@@ -114,18 +116,26 @@
 
         const cardsInputContainer = document.getElementById('cards-input');
         const ranks = ['N/A', 'A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
-        const suits = [{ symbol: 'N/A', name: 'N/A' }, { symbol: '♠', name: 'Spades' }, { symbol: '♥', name: 'Hearts' }, { symbol: '♦', name: 'Diamonds' }, { symbol: '♣', name: 'Clubs' }];
+        const suits = [{ symbol: 'N/A', name: 'N/A', color: '' }, { symbol: '♠', name: 'Spades', color: 'text-black dark:text-white' }, { symbol: '♥', name: 'Hearts', color: 'text-red-500' }, { symbol: '♦', name: 'Diamonds', color: 'text-red-500' }, { symbol: '♣', name: 'Clubs', color: 'text-black dark:text-white' }];
         for (let i = 1; i <= 5; i++) {
             const cardWrapper = document.createElement('div');
             cardWrapper.className = 'flex flex-col gap-1';
             const rankSelect = document.createElement('select');
             rankSelect.id = `card-rank-${i}`;
-            rankSelect.className = 'w-full text-center px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200';
+            rankSelect.className = 'w-full text-center px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 text-lg';
             ranks.forEach(rank => { const option = document.createElement('option'); option.value = rank; option.textContent = rank; rankSelect.appendChild(option); });
             const suitSelect = document.createElement('select');
             suitSelect.id = `card-suit-${i}`;
-            suitSelect.className = 'w-full text-center px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200';
-            suits.forEach(suit => { const option = document.createElement('option'); option.value = suit.symbol; option.textContent = suit.symbol; suitSelect.appendChild(option); });
+            suitSelect.className = 'w-full text-center px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 text-lg';
+            suits.forEach(suit => { 
+                const option = document.createElement('option'); 
+                option.value = suit.symbol; 
+                option.textContent = suit.symbol; 
+                if (suit.color) {
+                    option.className = suit.color;
+                }
+                suitSelect.appendChild(option); 
+            });
             cardWrapper.appendChild(rankSelect);
             cardWrapper.appendChild(suitSelect);
             cardsInputContainer.appendChild(cardWrapper);
