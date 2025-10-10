@@ -233,11 +233,11 @@
                 const settings = await response.json();
                 
                 const settingControls = [
-                    { id: 'titleFontSize', label: 'Titel (font)', min: 2, max: 12, step: 0.5, unit: 'rem' },
-                    { id: 'playerNameFontSize', label: 'Spelarnamn (font)', min: 2, max: 12, step: 0.5, unit: 'rem' },
-                    { id: 'handNameFontSize', label: 'Handnamn (font)', min: 2, max: 10, step: 0.5, unit: 'rem' },
-                    { id: 'participantCountFontSize', label: 'Deltagare (font)', min: 1, max: 8, step: 0.5, unit: 'rem' },
-                    { id: 'cardSize', label: 'Kortstorlek', min: 10, max: 30, step: 1, unit: 'vw' }
+                    { id: 'titleFontSize', label: 'Titel', min: 2, max: 12, step: 0.5, unit: 'rem' },
+                    { id: 'participantCountFontSize', label: 'Antal', min: 1, max: 8, step: 0.5, unit: 'rem' },
+                    { id: 'cardSize', label: 'Kortstorlek', min: 10, max: 30, step: 1, unit: 'vw' },
+                    { id: 'handNameFontSize', label: 'Handnamn', min: 2, max: 10, step: 0.5, unit: 'rem' },
+                    { id: 'playerNameFontSize', label: 'Spelarnamn', min: 2, max: 12, step: 0.5, unit: 'rem' }
                 ];
 
                 settingsForm.innerHTML = ''; // Rensa gamla kontroller

@@ -101,19 +101,19 @@
     <div id="app" class="relative w-full h-full flex flex-col justify-between text-center p-4 sm:p-8 bg-black bg-opacity-50">
         
         <div class="flex justify-between items-center">
-            <div class="w-20 sm:w-24 flex-shrink-0"></div>
+            <div id="title-placeholder" class="flex-shrink-0"></div>
             <h1 id="title" class="font-bold tracking-wider uppercase text-yellow-400 leading-tight">
                 KVÄLLENS HIGH HAND
             </h1>
             <div id="participant-circle-container" class="hidden flex-shrink-0">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center shadow-2xl">
+                <div id="participant-circle" class="bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center shadow-2xl">
                     <span id="participant-count" class="font-bold leading-none"></span>
                 </div>
             </div>
         </div>
 
         <div id="cards-and-handname" class="flex flex-col items-center justify-center my-4">
-            <div id="cards-container" class="flex justify-center items-center gap-2 sm:gap-4 md:gap-6">
+            <div id="cards-container" class="flex justify-center items-center">
                 <!-- Card images will be injected here by JavaScript -->
             </div>
         </div>
@@ -135,7 +135,9 @@
         const cardsContainerEl = document.getElementById('cards-container');
         const statusTextEl = document.getElementById('status-text');
         const participantCircleContainer = document.getElementById('participant-circle-container');
+        const participantCircleEl = document.getElementById('participant-circle');
         const participantCountEl = document.getElementById('participant-count');
+        const titlePlaceholderEl = document.getElementById('title-placeholder');
         const bodyEl = document.body;
         const handNameEl = document.getElementById('hand-name');
         let currentHandState = {};
@@ -197,11 +199,21 @@
             handNameEl.style.fontSize = `${settings.handNameFontSize}rem`;
             participantCountEl.style.fontSize = `${settings.participantCountFontSize}rem`;
 
-            // Update card sizes
+            // Dynamically resize participant circle and its placeholder
+            const circleSize = (settings.participantCountFontSize || 4) * 2.5; // Multiplier for sizing
+            participantCircleEl.style.width = `${circleSize}rem`;
+            participantCircleEl.style.height = `${circleSize}rem`;
+            titlePlaceholderEl.style.width = `${circleSize}rem`;
+
+            // Dynamically adjust card size and gap
+            const cardSize = settings.cardSize || 18;
             const cardElements = cardsContainerEl.querySelectorAll('.card-wrapper');
             cardElements.forEach(card => {
-                card.style.width = `${settings.cardSize}vw`;
+                card.style.width = `${cardSize}vw`;
             });
+            // Make gap smaller as cards get bigger
+            const gap = Math.max(0.2, 4 - (cardSize / 5));
+            cardsContainerEl.style.gap = `${gap}vw`;
         }
 
         function updateUI(data) {
@@ -248,10 +260,11 @@
                 if (currentHandState.id !== newHandId) {
                     currentHandState.id = newHandId;
                     cardsContainerEl.innerHTML = '';
+                    const cardSize = currentSettings.cardSize || 18;
                     data.cards.forEach(card => {
                         const filename = getCardImageFilename(card);
                         const cardHTML = `
-                            <div class="card-wrapper w-[18vw] max-w-[180px] aspect-[2.5/3.5]" style="width: ${currentSettings.cardSize || 18}vw;">
+                            <div class="card-wrapper max-w-[180px] aspect-[2.5/3.5]" style="width: ${cardSize}vw;">
                                 <img src="/images/cards/${filename}" alt="${card.rank} ${card.suit}" class="w-full h-full object-contain" loading="lazy">
                             </div>
                         `;
