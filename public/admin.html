@@ -87,6 +87,7 @@
         const settingsSection = document.getElementById('settings-section');
         const settingsToggleBtn = document.getElementById('settings-toggle-btn');
         const mainFormFields = document.getElementById('main-form-fields');
+        const resetBtn = document.getElementById('reset-btn');
         let socket;
         let playerNames = [];
 
@@ -108,6 +109,7 @@
             settingsSection.classList.toggle('hidden');
             mainFormFields.classList.toggle('hidden');
             submitBtn.classList.toggle('hidden');
+            resetBtn.classList.toggle('hidden');
         });
 
         // --- Background Image Change ---
