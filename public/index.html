@@ -29,7 +29,7 @@
         .relative { position: relative; }
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
-        .flex-shrink-0 { flex-shrink: 0; }
+        .flex-grow { flex-grow: 1; }
         .items-center { align-items: center; }
         .justify-center { justify-content: center; }
         .justify-between { justify-content: space-between; }
@@ -98,7 +98,7 @@
 </head>
 <body class="h-full text-white">
 
-    <div id="app" class="relative w-full h-full flex flex-col justify-between text-center p-4 sm:p-8 bg-black bg-opacity-50">
+    <div id="app" class="relative w-full h-full flex flex-col text-center p-4 sm:p-8 bg-black bg-opacity-50">
         
         <div class="flex justify-between items-center">
             <div id="title-placeholder" class="flex-shrink-0"></div>
@@ -117,7 +117,7 @@
             </div>
         </div>
 
-        <div id="cards-and-handname" class="flex flex-col items-center justify-center my-4">
+        <div id="card-section" class="flex-grow flex flex-col items-center justify-center my-4">
             <div id="cards-container" class="flex justify-center items-center">
                 <!-- Card images will be injected here by JavaScript -->
             </div>
