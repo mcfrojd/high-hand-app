@@ -91,7 +91,8 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: background-image 0.5s ease-in-out;
+            /* The transition is removed for better performance on low-powered devices */
+            /* transition: background-image 0.5s ease-in-out; */
         }
     </style>
 </head>
@@ -101,7 +102,7 @@
         
         <div class="flex justify-between items-center">
             <div class="w-20 sm:w-24 flex-shrink-0"></div>
-            <h1 class="font-bold tracking-wider uppercase text-yellow-400 text-[min(8vw,6rem)] leading-tight" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">
+            <h1 class="font-bold tracking-wider uppercase text-yellow-400 text-[min(8vw,6rem)] leading-tight">
                 KVÄLLENS HIGH HAND
             </h1>
             <div id="participant-circle-container" class="hidden flex-shrink-0">
@@ -118,7 +119,7 @@
         </div>
 
         <div id="handname-section" class="flex items-center justify-center my-2 min-h-[4rem]">
-            <div id="hand-name" class="text-[min(10vw,5rem)] sm:text-[4rem] font-extrabold text-yellow-300 drop-shadow-lg uppercase tracking-wide"></div>
+            <div id="hand-name" class="text-[min(10vw,5rem)] sm:text-[4rem] font-extrabold text-yellow-300 uppercase tracking-wide"></div>
         </div>
         
         <div id="player-section" class="min-h-[6rem] sm:min-h-[8rem] flex items-center justify-center">
@@ -233,7 +234,7 @@
                         const filename = getCardImageFilename(card);
                         const cardHTML = `
                             <div class="w-[18vw] max-w-[180px] aspect-[2.5/3.5]">
-                                <img src="/images/cards/${filename}" alt="${card.rank} ${card.suit}" class="w-full h-full object-contain drop-shadow-xl" loading="lazy">
+                                <img src="/images/cards/${filename}" alt="${card.rank} ${card.suit}" class="w-full h-full object-contain" loading="lazy">
                             </div>
                         `;
                         cardsContainerEl.insertAdjacentHTML('beforeend', cardHTML);
