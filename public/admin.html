@@ -555,7 +555,7 @@
             // Skicka "reset"-data till displayen
             const backgroundImage = backgroundSelect.value;
             const dataToSave = {
-                playerName: "Välj Namn",
+                playerName: "",
                 participantCount: 0,
                 cards: [
                     { rank: "N/A", suit: "N/A" },
@@ -567,7 +567,7 @@
                 backgroundImage, // Behåll nuvarande bakgrund
                 updatedAt: new Date().toISOString(),
                 reset: true,
-                handName: "100 KR"
+                handName: ""
             };
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify(dataToSave));
