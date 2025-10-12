@@ -567,7 +567,7 @@
                 backgroundImage, // Behåll nuvarande bakgrund
                 updatedAt: new Date().toISOString(),
                 reset: true,
-                handName: "100 KR FRIVILLIG SIDOPOTT"
+                handName: "100 KR"
             };
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify(dataToSave));
