@@ -92,7 +92,7 @@ npm install pm2 -g
 4. **Starta servern med PM2:**
 - Detta startar servern och ser till att den startas om automatiskt om den skulle krascha.
 ```
-pm2 start server.js --name "high-hand-server"
+pm2 start server.js --name "high-hand-server" -f
 ```
 
 5. **Sätt upp PM2 att starta vid omstart av containern:**

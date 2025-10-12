@@ -165,6 +165,30 @@
             handRankDisplay.textContent = evaluateHand(cards);
         }
 
+        function sendRealtimeUpdate() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+            const playerName = document.getElementById('player-name').value;
+            const participantCount = document.getElementById('participant-count').value;
+            const cards = [];
+            for (let i = 1; i <= 5; i++) {
+                cards.push({
+                    rank: document.getElementById(`card-rank-${i}`).value,
+                    suit: document.getElementById(`card-suit-${i}`).value
+                });
+            }
+            const backgroundImage = backgroundSelect.value;
+            const dataToSave = {
+                playerName,
+                participantCount: parseInt(participantCount, 10) || 0,
+                cards,
+                backgroundImage,
+                updatedAt: new Date().toISOString()
+            };
+
+            socket.send(JSON.stringify(dataToSave));
+        }
+
 
         // --- Participant Count Buttons ---
         const participantCountInput = document.getElementById('participant-count');
@@ -172,11 +196,13 @@
             let currentValue = parseInt(participantCountInput.value, 10) || 0;
             if (currentValue > 0) {
                 participantCountInput.value = currentValue - 1;
+                sendRealtimeUpdate();
             }
         });
         document.getElementById('increment-btn').addEventListener('click', () => {
             let currentValue = parseInt(participantCountInput.value, 10) || 0;
             participantCountInput.value = currentValue + 1;
+            sendRealtimeUpdate();
         });
 
         // --- Settings Toggle ---
