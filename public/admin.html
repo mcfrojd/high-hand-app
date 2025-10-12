@@ -396,25 +396,55 @@
 
             formElement.innerHTML = ''; // Rensa gamla kontroller
             settingControls.forEach(({ id, label, min, max, step, unit }) => {
-                const value = settingsData[id] || 0;
+                const value = settingsData[id] || min;
                 const controlHtml = `
-                    <div class="grid grid-cols-3 items-center gap-4">
-                        <label for="setting-${type}-${id}" class="text-sm font-medium text-gray-300 col-span-1">${label}</label>
-                        <input type="range" id="setting-${type}-${id}" data-setting-id="${id}" data-setting-type="${type}" min="${min}" max="${max}" step="${step}" value="${value}" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer col-span-1">
-                        <span class="text-sm text-gray-400 col-span-1"><span id="value-${type}-${id}">${value}</span> ${unit}</span>
+                    <div class="grid grid-cols-3 items-center gap-4 mb-2">
+                        <label class="text-sm font-medium text-gray-300 col-span-3">${label}</label>
+                        <div class="col-span-3 grid grid-cols-3 gap-2">
+                            <button type="button" data-action="decrement" data-setting-id="${id}" data-setting-type="${type}" data-step="${step}" data-min="${min}" class="w-full py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-md">-</button>
+                            <div id="value-${type}-${id}" class="w-full text-center px-2 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-200 flex items-center justify-center">
+                                ${value} ${unit}
+                            </div>
+                            <button type="button" data-action="increment" data-setting-id="${id}" data-setting-type="${type}" data-step="${step}" data-max="${max}" class="w-full py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-md">+</button>
+                        </div>
                     </div>
                 `;
                 formElement.insertAdjacentHTML('beforeend', controlHtml);
             });
 
-            // Add event listeners after creating the controls
-            formElement.querySelectorAll('input[type="range"]').forEach(input => {
-                input.addEventListener('input', (e) => {
-                    const id = e.target.dataset.settingId;
-                    const type = e.target.dataset.settingType;
-                    document.getElementById(`value-${type}-${id}`).textContent = e.target.value;
+            // Add event listeners for the new buttons
+            formElement.querySelectorAll('button[data-action]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const action = e.currentTarget.dataset.action;
+                    const id = e.currentTarget.dataset.settingId;
+                    const type = e.currentTarget.dataset.settingType;
+                    const step = parseFloat(e.currentTarget.dataset.step);
+                    const min = parseFloat(e.currentTarget.dataset.min);
+                    const max = parseFloat(e.currentTarget.dataset.max);
+                    
+                    const valueEl = document.getElementById(`value-${type}-${id}`);
+                    const unit = valueEl.textContent.split(' ').pop();
+                    let currentValue = parseFloat(valueEl.textContent);
+
+                    if (action === 'increment') {
+                        currentValue = Math.min(max, currentValue + step);
+                    } else if (action === 'decrement') {
+                        currentValue = Math.max(min, currentValue - step);
+                    }
+                    
+                    // Fix potential floating point inaccuracies
+                    currentValue = parseFloat(currentValue.toFixed(2));
+
+                    valueEl.textContent = `${currentValue} ${unit}`;
+
+                    // Simulate a 'change' event to trigger saving
+                    handleSettingChange({ 
+                        target: { 
+                            dataset: { settingId: id, settingType: type }, 
+                            value: currentValue 
+                        } 
+                    });
                 });
-                input.addEventListener('change', handleSettingChange);
             });
         }
 
