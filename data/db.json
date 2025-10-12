@@ -1,5 +1,5 @@
 {
-  "playerName": "ANTAL ANMÄLDA",
+  "playerName": "",
   "participantCount": 0,
   "cards": [
     {
@@ -26,5 +26,5 @@
   "backgroundImage": "/images/backgrounds/room.jpg",
   "updatedAt": "2025-09-25T12:46:46.444Z",
   "reset": true,
-  "handName": "100 KR FRIVILLIG SIDOPOTT"
+  "handName": ""
 }
