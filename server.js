@@ -13,6 +13,9 @@ const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ server });
 
+// Add a map to store client types
+const clientTypes = new Map();
+
 // Sökväg till våra "databas"-filer
 const dbFilePath = path.join(__dirname, 'data', 'db.json');
 const playersDbPath = path.join(__dirname, 'data', 'players.json');
@@ -56,12 +59,26 @@ function readSettingsFromFile() {
         if (fs.existsSync(settingsDbPath)) {
             const data = fs.readFileSync(settingsDbPath, 'utf8');
             currentSettings = JSON.parse(data);
+            // Ensure structure is correct
+            if (!currentSettings.large || !currentSettings.small) {
+                throw new Error('Invalid settings format');
+            }
         } else {
-            currentSettings = { titleFontSize: 6, participantCountFontSize: 4, handNameFontSize: 5, playerNameFontSize: 6, cardSize: 18 };
+            // Default settings for both large and small screens
+            currentSettings = {
+                large: { titleFontSize: 6, participantCountFontSize: 4, handNameFontSize: 5, playerNameFontSize: 6, cardSize: 18 },
+                small: { titleFontSize: 4, participantCountFontSize: 3, handNameFontSize: 4, playerNameFontSize: 5, cardSize: 15 }
+            };
             saveSettingsToFile();
         }
     } catch (error) {
-        console.error('Kunde inte läsa från settings.json:', error);
+        console.error('Kunde inte läsa från settings.json, återställer till standard:', error);
+        // Fallback to default if file is corrupt or has wrong format
+        currentSettings = {
+            large: { titleFontSize: 6, participantCountFontSize: 4, handNameFontSize: 5, playerNameFontSize: 6, cardSize: 18 },
+            small: { titleFontSize: 4, participantCountFontSize: 3, handNameFontSize: 4, playerNameFontSize: 5, cardSize: 15 }
+        };
+        saveSettingsToFile();
     }
 }
 
@@ -141,20 +158,26 @@ app.get('/api/settings', (req, res) => {
 });
 
 // API-endpoint för att uppdatera inställningar
-app.post('/api/settings', (req, res) => {
+app.post('/api/settings/:type', (req, res) => {
+    const { type } = req.params; // 'large' or 'small'
     const newSettings = req.body;
+
+    if (type !== 'large' && type !== 'small') {
+        return res.status(400).json({ message: 'Invalid settings type' });
+    }
+
     // Validering och sanering kan läggas till här
-    currentSettings = { ...currentSettings, ...newSettings };
+    currentSettings[type] = { ...currentSettings[type], ...newSettings };
     saveSettingsToFile();
 
-    // Skicka uppdaterade inställningar till alla anslutna display-klienter
+    // Skicka uppdaterade inställningar till relevanta display-klienter
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'settingsUpdate', payload: currentSettings }));
+        if (client.readyState === WebSocket.OPEN && clientTypes.get(client) === type) {
+            client.send(JSON.stringify({ type: 'settingsUpdate', payload: currentSettings[type] }));
         }
     });
 
-    res.status(200).json({ message: 'Inställningar uppdaterade', settings: currentSettings });
+    res.status(200).json({ message: `Inställningar för ${type} uppdaterade`, settings: currentSettings[type] });
 });
 
 
@@ -181,20 +204,32 @@ app.get('/api/backgrounds', (req, res) => {
 // --- WEBSOCKET-SERVER ---
 wss.on('connection', (ws) => {
     console.log('En klient kopplade upp sig.');
-    // Skicka aktuell status (både high hand och inställningar) till den nya klienten
-    const initialState = {
-        type: 'initialState',
-        payload: {
-            highHand: currentHighHand,
-            settings: currentSettings
-        }
-    };
-    ws.send(JSON.stringify(initialState));
 
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message);
-            // Uppdatera currentHighHand med den nya datan
+
+            // Handle client type registration
+            if (data.type === 'register') {
+                const clientType = data.payload.screenType; // 'large' or 'small'
+                if (clientType === 'large' || clientType === 'small') {
+                    clientTypes.set(ws, clientType);
+                    console.log(`Klient registrerad som: ${clientType}`);
+                    
+                    // Send initial state for that type
+                    const initialState = {
+                        type: 'initialState',
+                        payload: {
+                            highHand: currentHighHand,
+                            settings: currentSettings[clientType]
+                        }
+                    };
+                    ws.send(JSON.stringify(initialState));
+                }
+                return; // Stop processing after registration
+            }
+
+            // Uppdatera currentHighHand med den nya datan från admin
             currentHighHand = data;
             saveDataToFile(); // Spara till db.json
 
@@ -211,6 +246,7 @@ wss.on('connection', (ws) => {
 
     ws.on('close', () => {
         console.log('En klient kopplade från.');
+        clientTypes.delete(ws); // Clean up client type on disconnect
     });
 });
 

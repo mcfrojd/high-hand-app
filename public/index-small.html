@@ -291,8 +291,8 @@
             const socket = new WebSocket(`${protocol}://${window.location.host}`);
             socket.onopen = () => {
                 statusTextEl.textContent = 'Väntar på data...';
-                // Register this client as a 'large' screen
-                socket.send(JSON.stringify({ type: 'register', payload: { screenType: 'large' } }));
+                // Register this client as a 'small' screen
+                socket.send(JSON.stringify({ type: 'register', payload: { screenType: 'small' } }));
             };
             socket.onmessage = (event) => { 
                 const data = JSON.parse(event.data);

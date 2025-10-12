@@ -61,12 +61,20 @@
 
         <!-- Settings Section -->
         <div id="settings-section" class="mt-8 border-t border-gray-700 pt-6 hidden">
-            <h2 class="text-xl font-bold text-gray-100 mb-4">Displayinställningar</h2>
-            <div id="settings-form" class="space-y-4">
-                <!-- Settings will be populated here by JS -->
+            <!-- Large Screen Settings -->
+            <h2 class="text-xl font-bold text-gray-100 mb-4">Displayinställningar - Stor Skärm (index.html)</h2>
+            <div id="settings-form-large" class="space-y-4 mb-8">
+                <!-- Large settings will be populated here by JS -->
             </div>
-            <div class="mt-4">
-                <label for="background-select" class="block text-sm font-medium text-gray-300 mb-1">Bakgrundsbild</label>
+
+            <!-- Small Screen Settings -->
+            <h2 class="text-xl font-bold text-gray-100 mb-4">Displayinställningar - Liten Skärm (index-small.html)</h2>
+            <div id="settings-form-small" class="space-y-4">
+                <!-- Small settings will be populated here by JS -->
+            </div>
+
+            <div class="mt-8">
+                <label for="background-select" class="block text-sm font-medium text-gray-300 mb-1">Bakgrundsbild (Gemensam)</label>
                 <select id="background-select" class="w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-gray-700 text-gray-200">
                     <option value="">Ingen bakgrund (mörk)</option>
                 </select>
@@ -85,7 +93,8 @@
         const backgroundError = document.getElementById('background-error');
         const playerNameInput = document.getElementById('player-name');
         const playerSuggestionsContainer = document.getElementById('player-suggestions');
-        const settingsForm = document.getElementById('settings-form');
+        const settingsFormLarge = document.getElementById('settings-form-large');
+        const settingsFormSmall = document.getElementById('settings-form-small');
         const settingsSection = document.getElementById('settings-section');
         const settingsToggleBtn = document.getElementById('settings-toggle-btn');
         const mainFormFields = document.getElementById('main-form-fields');
@@ -336,55 +345,62 @@
             try {
                 const response = await fetch('/api/settings');
                 if (!response.ok) throw new Error('Kunde inte hämta inställningar');
-                const settings = await response.json();
+                const settings = await response.json(); // { large: {...}, small: {...} }
                 
-                const settingControls = [
-                    { id: 'titleFontSize', label: 'Titel', min: 2, max: 12, step: 0.5, unit: 'rem' },
-                    { id: 'participantCountFontSize', label: 'Antal', min: 1, max: 8, step: 0.5, unit: 'rem' },
-                    { id: 'cardSize', label: 'Kortstorlek', min: 10, max: 30, step: 1, unit: 'vw' },
-                    { id: 'handNameFontSize', label: 'Handnamn', min: 2, max: 10, step: 0.5, unit: 'rem' },
-                    { id: 'playerNameFontSize', label: 'Spelarnamn', min: 2, max: 12, step: 0.5, unit: 'rem' }
-                ];
-
-                settingsForm.innerHTML = ''; // Rensa gamla kontroller
-                settingControls.forEach(({ id, label, min, max, step, unit }) => {
-                    const value = settings[id] || 0;
-                    const controlHtml = `
-                        <div class="grid grid-cols-3 items-center gap-4">
-                            <label for="setting-${id}" class="text-sm font-medium text-gray-300 col-span-1">${label}</label>
-                            <input type="range" id="setting-${id}" data-setting-id="${id}" min="${min}" max="${max}" step="${step}" value="${value}" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer col-span-1">
-                            <span class="text-sm text-gray-400 col-span-1"><span id="value-${id}">${value}</span> ${unit}</span>
-                        </div>
-                    `;
-                    settingsForm.insertAdjacentHTML('beforeend', controlHtml);
-                });
-
-                // Add event listeners after creating the controls
-                document.querySelectorAll('#settings-form input[type="range"]').forEach(input => {
-                    input.addEventListener('input', (e) => {
-                        const id = e.target.dataset.settingId;
-                        document.getElementById(`value-${id}`).textContent = e.target.value;
-                    });
-                    input.addEventListener('change', handleSettingChange);
-                });
+                renderSettingsForType('large', settings.large, settingsFormLarge);
+                renderSettingsForType('small', settings.small, settingsFormSmall);
 
             } catch (error) {
                 console.error('Fel vid hämtning av inställningar:', error);
             }
         }
 
+        function renderSettingsForType(type, settingsData, formElement) {
+            const settingControls = [
+                { id: 'titleFontSize', label: 'Titel', min: 2, max: 12, step: 0.5, unit: 'rem' },
+                { id: 'participantCountFontSize', label: 'Antal', min: 1, max: 8, step: 0.5, unit: 'rem' },
+                { id: 'cardSize', label: 'Kortstorlek', min: 10, max: 30, step: 1, unit: 'vw' },
+                { id: 'handNameFontSize', label: 'Handnamn', min: 2, max: 10, step: 0.5, unit: 'rem' },
+                { id: 'playerNameFontSize', label: 'Spelarnamn', min: 2, max: 12, step: 0.5, unit: 'rem' }
+            ];
+
+            formElement.innerHTML = ''; // Rensa gamla kontroller
+            settingControls.forEach(({ id, label, min, max, step, unit }) => {
+                const value = settingsData[id] || 0;
+                const controlHtml = `
+                    <div class="grid grid-cols-3 items-center gap-4">
+                        <label for="setting-${type}-${id}" class="text-sm font-medium text-gray-300 col-span-1">${label}</label>
+                        <input type="range" id="setting-${type}-${id}" data-setting-id="${id}" data-setting-type="${type}" min="${min}" max="${max}" step="${step}" value="${value}" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer col-span-1">
+                        <span class="text-sm text-gray-400 col-span-1"><span id="value-${type}-${id}">${value}</span> ${unit}</span>
+                    </div>
+                `;
+                formElement.insertAdjacentHTML('beforeend', controlHtml);
+            });
+
+            // Add event listeners after creating the controls
+            formElement.querySelectorAll('input[type="range"]').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const id = e.target.dataset.settingId;
+                    const type = e.target.dataset.settingType;
+                    document.getElementById(`value-${type}-${id}`).textContent = e.target.value;
+                });
+                input.addEventListener('change', handleSettingChange);
+            });
+        }
+
         async function handleSettingChange(event) {
             const id = event.target.dataset.settingId;
+            const type = event.target.dataset.settingType;
             const value = parseFloat(event.target.value);
             
             try {
-                await fetch('/api/settings', {
+                await fetch(`/api/settings/${type}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ [id]: value })
                 });
             } catch (error) {
-                console.error(`Kunde inte spara inställning ${id}:`, error);
+                console.error(`Kunde inte spara inställning ${id} for ${type}:`, error);
             }
         }
 
@@ -479,17 +495,19 @@
                 connectionStatusEl.title = 'Ansluten';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Spara ny högsta hand';
+                // Admin does not need to register a type
             };
             socket.onmessage = async (event) => {
                 await backgroundsPromise;
                 await fetchPlayers(); // Hämta spelare när anslutningen är upprättad
                 await fetchAndRenderSettings(); // Hämta inställningar
                 const data = JSON.parse(event.data);
-                // Initial message contains both high hand and settings
-                if (data.type === 'initialState') {
-                    updateForm(data.payload.highHand);
-                } else if (data.type === 'handUpdate') {
-                    updateForm(data.payload);
+
+                // Admin only cares about the initial high-hand data to populate the form
+                // It gets settings via a separate API call.
+                if (data.type === 'initialState' || data.type === 'handUpdate') {
+                    const payload = data.payload.highHand || data.payload;
+                    updateForm(payload);
                 }
             };
             socket.onclose = () => {
