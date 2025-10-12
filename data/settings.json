@@ -1,0 +1,16 @@
+{
+  "large": {
+    "titleFontSize": 6,
+    "participantCountFontSize": 4,
+    "cardSize": 18,
+    "handNameFontSize": 5,
+    "playerNameFontSize": 6
+  },
+  "small": {
+    "titleFontSize": 4,
+    "participantCountFontSize": 3,
+    "cardSize": 15,
+    "handNameFontSize": 4,
+    "playerNameFontSize": 5
+  }
+}
