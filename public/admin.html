@@ -490,35 +490,57 @@
         function connect(backgroundsPromise) {
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
             socket = new WebSocket(`${protocol}://${window.location.host}`);
+
+            // Create a promise that resolves when the first message is received
+            const firstMessagePromise = new Promise(resolve => {
+                socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'initialState') {
+                        const payload = data.payload.highHand || data.payload;
+                        resolve(payload);
+                    }
+                };
+            });
+
             socket.onopen = async () => {
                 connectionStatusEl.classList.replace('bg-red-500', 'bg-green-500');
                 connectionStatusEl.title = 'Ansluten';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Spara ny högsta hand';
                 
-                // Fetch data as soon as connection is open
-                await backgroundsPromise;
+                // Fetch settings and players as soon as connection is open
                 await fetchPlayers();
                 await fetchAndRenderSettings();
-            };
-            socket.onmessage = async (event) => {
-                const data = JSON.parse(event.data);
 
-                // Admin only cares about the initial high-hand data to populate the form
-                // It gets settings via a separate API call.
-                if (data.type === 'initialState' || data.type === 'handUpdate') {
-                    const payload = data.payload.highHand || data.payload;
-                    updateForm(payload);
-                }
+                // Wait for both backgrounds to be fetched AND the initial state to arrive
+                const [_, initialState] = await Promise.all([backgroundsPromise, firstMessagePromise]);
+                
+                // Now it's safe to update the form with the correct background selected
+                updateForm(initialState);
+
+                // Replace the onmessage handler to process subsequent updates
+                socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'handUpdate') {
+                        updateForm(data.payload);
+                    }
+                };
             };
+
             socket.onclose = () => {
                 connectionStatusEl.classList.replace('bg-green-500', 'bg-red-500');
                 connectionStatusEl.title = 'Frånkopplad';
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Ansluter till servern...';
-                setTimeout(() => connect(backgroundsPromise), 3000);
+                submitBtn.textContent = 'Ansluter...';
+                setTimeout(() => connect(backgroundsPromise), 2000); // Pass promise on reconnect
             };
-            socket.onerror = (error) => { console.error('WebSocket-fel:', error); socket.close(); };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket-fel:', error);
+                statusMessage.textContent = 'Anslutningsfel.';
+                statusMessage.classList.add('text-red-400');
+                socket.close();
+            };
         }
 
         highHandForm.addEventListener('submit', async (e) => {
