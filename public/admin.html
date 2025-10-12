@@ -490,17 +490,18 @@
         function connect(backgroundsPromise) {
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
             socket = new WebSocket(`${protocol}://${window.location.host}`);
-            socket.onopen = () => {
+            socket.onopen = async () => {
                 connectionStatusEl.classList.replace('bg-red-500', 'bg-green-500');
                 connectionStatusEl.title = 'Ansluten';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Spara ny högsta hand';
-                // Admin does not need to register a type
+                
+                // Fetch data as soon as connection is open
+                await backgroundsPromise;
+                await fetchPlayers();
+                await fetchAndRenderSettings();
             };
             socket.onmessage = async (event) => {
-                await backgroundsPromise;
-                await fetchPlayers(); // Hämta spelare när anslutningen är upprättad
-                await fetchAndRenderSettings(); // Hämta inställningar
                 const data = JSON.parse(event.data);
 
                 // Admin only cares about the initial high-hand data to populate the form
