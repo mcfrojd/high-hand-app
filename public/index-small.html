@@ -233,7 +233,7 @@
             // Load the new background image with JavaScript only when needed.
             // This fixes the preload warning and prevents a visual flicker.
             const imageName = data.backgroundImage; // e.g., 'room.jpg' or null
-            const newBgUrl = imageName ? `${imageName}` : '';
+            const newBgUrl = imageName ? `/images/backgrounds/${imageName}` : '';
             const newBgStyle = newBgUrl ? `url("${newBgUrl}")` : '';
 
             if (bodyEl.style.backgroundImage !== newBgStyle) {
@@ -286,18 +286,6 @@
             }
         }
         
-        function updateDisplay(data) {
-            // Update background image
-            if (data.backgroundImage) {
-                // Construct the full path from the filename
-                document.body.style.backgroundImage = `url('/images/backgrounds/${data.backgroundImage}')`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-            } else {
-                document.body.style.backgroundImage = 'none';
-            }
-        }
-
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
             const socket = new WebSocket(`${protocol}://${window.location.host}`);
