@@ -128,15 +128,16 @@ app.use(express.json());
 
 // --- API Endpoint to get the current state ---
 app.get('/api/state', (req, res) => {
-    fs.readFile(DB_PATH, 'utf8', (err, data) => {
+    // Use the correct variable 'dbFilePath'
+    fs.readFile(dbFilePath, 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading database file for state:', err);
             return res.status(500).json({ error: 'Could not read database file.' });
         }
         try {
             const db = JSON.parse(data);
-            // Send back just the highHand object, or an empty object if it doesn't exist
-            res.json(db.highHand || {});
+            // The db.json file contains the high hand object directly.
+            res.json(db || {});
         } catch (parseErr) {
             console.error('Error parsing database file for state:', parseErr);
             res.status(500).json({ error: 'Could not parse database file.' });
