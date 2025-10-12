@@ -114,6 +114,23 @@
         let playerNames = [];
         let isInitialLoad = true;
 
+        // --- Helper function to fetch initial state via HTTP ---
+        async function fetchInitialState() {
+            try {
+                const response = await fetch('/api/state');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const state = await response.json();
+                // The state from this endpoint might be directly the highHand object
+                const payload = state.highHand || state;
+                updateForm(payload);
+            } catch (error) {
+                console.error('Could not fetch initial state via HTTP:', error);
+                // Silently fail, as WebSocket might still provide the data.
+            }
+        }
+
         // --- Helper function to set suit color on the select element ---
         function setSuitSelectColor(selectElement) {
             const selectedSuit = suits.find(s => s.symbol === selectElement.value);
@@ -698,6 +715,7 @@
         });
 
         const backgroundsPromise = fetchBackgrounds();
+        fetchInitialState(); // Fetch state immediately on page load
         connect(backgroundsPromise);
     </script>
 </body>
