@@ -102,6 +102,7 @@
         const handRankDisplay = document.getElementById('hand-rank-display');
         let socket;
         let playerNames = [];
+        let isInitialLoad = true;
 
         // --- Helper function to set suit color on the select element ---
         function setSuitSelectColor(selectElement) {
@@ -491,40 +492,36 @@
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
             socket = new WebSocket(`${protocol}://${window.location.host}`);
 
-            // Create a promise that resolves when the first message is received
-            const firstMessagePromise = new Promise(resolve => {
-                socket.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'initialState') {
-                        const payload = data.payload.highHand || data.payload;
-                        resolve(payload);
-                    }
-                };
-            });
-
             socket.onopen = async () => {
                 connectionStatusEl.classList.replace('bg-red-500', 'bg-green-500');
                 connectionStatusEl.title = 'Ansluten';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Spara ny högsta hand';
                 
-                // Fetch settings and players as soon as connection is open
+                // Fetch non-state data as soon as connection is open
                 await fetchPlayers();
                 await fetchAndRenderSettings();
+            };
 
-                // Wait for both backgrounds to be fetched AND the initial state to arrive
-                const [_, initialState] = await Promise.all([backgroundsPromise, firstMessagePromise]);
-                
-                // Now it's safe to update the form with the correct background selected
-                updateForm(initialState);
+            socket.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                let payload;
 
-                // Replace the onmessage handler to process subsequent updates
-                socket.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'handUpdate') {
-                        updateForm(data.payload);
+                if (data.type === 'initialState') {
+                    payload = data.payload.highHand || data.payload;
+                    if (isInitialLoad) {
+                        // On the very first load, wait for backgrounds to be ready
+                        await backgroundsPromise;
+                        updateForm(payload);
+                        isInitialLoad = false; // Prevent this from running again
+                    } else {
+                        // If we get another initialState (e.g. from server restart), just update
+                        updateForm(payload);
                     }
-                };
+                } else if (data.type === 'handUpdate') {
+                    payload = data.payload;
+                    updateForm(payload);
+                }
             };
 
             socket.onclose = () => {
@@ -532,6 +529,7 @@
                 connectionStatusEl.title = 'Frånkopplad';
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Ansluter...';
+                isInitialLoad = true; // Reset for the next connection attempt
                 setTimeout(() => connect(backgroundsPromise), 2000); // Pass promise on reconnect
             };
 
