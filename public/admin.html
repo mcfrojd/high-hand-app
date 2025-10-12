@@ -62,15 +62,25 @@
         <!-- Settings Section -->
         <div id="settings-section" class="mt-8 border-t border-gray-700 pt-6 hidden">
             <!-- Large Screen Settings -->
-            <h2 class="text-xl font-bold text-gray-100 mb-4">Displayinställningar - (index.html)</h2>
-            <div id="settings-form-large" class="space-y-4 mb-8">
-                <!-- Large settings will be populated here by JS -->
+            <div class="mb-6">
+                <h2 id="settings-large-toggle" class="flex justify-between items-center text-xl font-bold text-gray-100 mb-4 cursor-pointer hover:text-indigo-400">
+                    <span>Displayinställningar - (index.html)</span>
+                    <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </h2>
+                <div id="settings-form-large" class="space-y-4 hidden">
+                    <!-- Large settings will be populated here by JS -->
+                </div>
             </div>
 
             <!-- Small Screen Settings -->
-            <h2 class="text-xl font-bold text-gray-100 mb-4">Displayinställningar - (index-small.html)</h2>
-            <div id="settings-form-small" class="space-y-4">
-                <!-- Small settings will be populated here by JS -->
+            <div class="mb-6">
+                <h2 id="settings-small-toggle" class="flex justify-between items-center text-xl font-bold text-gray-100 mb-4 cursor-pointer hover:text-indigo-400">
+                    <span>Displayinställningar - (index-small.html)</span>
+                    <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </h2>
+                <div id="settings-form-small" class="space-y-4 hidden">
+                    <!-- Small settings will be populated here by JS -->
+                </div>
             </div>
 
             <div class="mt-8">
@@ -212,6 +222,21 @@
             submitBtn.classList.toggle('hidden');
             resetBtn.classList.toggle('hidden');
         });
+
+        // --- Collapsible Settings Sections ---
+        function setupCollapsible(toggleId, contentId) {
+            const toggle = document.getElementById(toggleId);
+            const content = document.getElementById(contentId);
+            const icon = toggle.querySelector('svg');
+
+            toggle.addEventListener('click', () => {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        }
+        setupCollapsible('settings-large-toggle', 'settings-form-large');
+        setupCollapsible('settings-small-toggle', 'settings-form-small');
+
 
         // --- Background Image Change ---
         backgroundSelect.addEventListener('change', () => {
