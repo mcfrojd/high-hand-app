@@ -76,7 +76,7 @@
             <div class="mt-8">
                 <label for="background-select" class="block text-sm font-medium text-gray-300 mb-1">Bakgrundsbild (Gemensam)</label>
                 <select id="background-select" class="w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-gray-700 text-gray-200">
-                    <option value="">Ingen bakgrund (mörk)</option>
+                    <!-- Options will be populated by JS -->
                 </select>
                 <p id="background-error" class="text-xs text-red-500 mt-1 h-4"></p>
             </div>
@@ -194,7 +194,7 @@
             const participantCount = document.getElementById('participant-count').value;
             const cards = [];
             for (let i = 1; i <= 5; i++) { cards.push({ rank: document.getElementById(`card-rank-${i}`).value, suit: document.getElementById(`card-suit-${i}`).value }); }
-            const backgroundImage = backgroundSelect.value;
+            const backgroundImage = backgroundSelect.value; // This is now just the filename
             const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
 
             if (socket && socket.readyState === WebSocket.OPEN) {
@@ -338,7 +338,10 @@
                     setSuitSelectColor(suitSelect); // Set initial color
                 }
             }
-            backgroundSelect.value = data.backgroundImage || '';
+            // Handle both old and new formats for backgroundImage
+            const bgValue = data.backgroundImage || '';
+            const filename = bgValue.split('/').pop(); // Extracts "room.jpg" from "/images/backgrounds/room.jpg" or "room.jpg"
+            backgroundSelect.value = filename;
             updateHandRankDisplay(); // Set initial hand rank
         }
 
@@ -476,9 +479,13 @@
                 const response = await fetch('/api/backgrounds');
                 if (!response.ok) { throw new Error(`Nätverksfel: HTTP-status: ${response.status}`); }
                 const backgrounds = await response.json();
+                if (backgrounds.length === 0) {
+                    backgroundError.textContent = 'Inga bakgrundsbilder hittades.';
+                    return;
+                }
                 backgrounds.forEach(bg => {
                     const option = document.createElement('option');
-                    option.value = `/images/backgrounds/${bg}`;
+                    option.value = bg; // Use just the filename
                     option.textContent = bg;
                     backgroundSelect.appendChild(option);
                 });
@@ -553,7 +560,7 @@
                 const participantCount = document.getElementById('participant-count').value;
                 const cards = [];
                 for (let i = 1; i <= 5; i++) { cards.push({ rank: document.getElementById(`card-rank-${i}`).value, suit: document.getElementById(`card-suit-${i}`).value }); }
-                const backgroundImage = backgroundSelect.value;
+                const backgroundImage = backgroundSelect.value; // This is now just the filename
                 const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
                 
                 if (socket.readyState === WebSocket.OPEN) {
@@ -574,7 +581,7 @@
         
         document.getElementById('reset-btn').addEventListener('click', () => {
             // Skicka "reset"-data till displayen
-            const backgroundImage = backgroundSelect.value;
+            const backgroundImage = backgroundSelect.value; // This is now just the filename
             const dataToSave = {
                 playerName: "",
                 participantCount: 0,
@@ -585,7 +592,7 @@
                     { rank: "N/A", suit: "N/A" },
                     { rank: "N/A", suit: "N/A" }
                 ],
-                backgroundImage, // Behåll nuvarande bakgrund
+                backgroundImage, // Behåll nuvarande bakgrund (filename)
                 updatedAt: new Date().toISOString(),
                 reset: true,
                 handName: ""

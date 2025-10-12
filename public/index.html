@@ -286,6 +286,18 @@
             }
         }
         
+        function updateDisplay(data) {
+            // Update background image
+            if (data.backgroundImage) {
+                // Construct the full path from the filename
+                document.body.style.backgroundImage = `url('/images/backgrounds/${data.backgroundImage}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+            } else {
+                document.body.style.backgroundImage = 'none';
+            }
+        }
+
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
             const socket = new WebSocket(`${protocol}://${window.location.host}`);
