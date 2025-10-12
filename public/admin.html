@@ -397,13 +397,14 @@
             formElement.innerHTML = ''; // Rensa gamla kontroller
             settingControls.forEach(({ id, label, min, max, step, unit }) => {
                 const value = settingsData[id] || min;
+                // Updated layout: label and controls on the same row, more compact.
                 const controlHtml = `
-                    <div class="grid grid-cols-3 items-center gap-4 mb-2">
-                        <label class="text-sm font-medium text-gray-300 col-span-3">${label}</label>
-                        <div class="col-span-3 grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-[1fr_2fr] sm:grid-cols-[1fr_1.5fr] items-center gap-x-4 mb-3">
+                        <label class="text-sm font-medium text-gray-300 truncate">${label}</label>
+                        <div class="grid grid-cols-3 gap-2">
                             <button type="button" data-action="decrement" data-setting-id="${id}" data-setting-type="${type}" data-step="${step}" data-min="${min}" class="w-full py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-md">-</button>
-                            <div id="value-${type}-${id}" class="w-full text-center px-2 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-200 flex items-center justify-center">
-                                ${value} ${unit}
+                            <div id="value-${type}-${id}" class="w-full text-center px-1 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-200 flex items-center justify-center text-sm">
+                                ${value}${unit}
                             </div>
                             <button type="button" data-action="increment" data-setting-id="${id}" data-setting-type="${type}" data-step="${step}" data-max="${max}" class="w-full py-2 bg-gray-600 text-lg font-bold hover:bg-gray-500 rounded-md">+</button>
                         </div>
@@ -423,8 +424,9 @@
                     const max = parseFloat(e.currentTarget.dataset.max);
                     
                     const valueEl = document.getElementById(`value-${type}-${id}`);
-                    const unit = valueEl.textContent.split(' ').pop();
-                    let currentValue = parseFloat(valueEl.textContent);
+                    const currentText = valueEl.textContent;
+                    const unit = currentText.replace(/[0-9.-]/g, ''); // Extract unit (rem, vw)
+                    let currentValue = parseFloat(currentText);
 
                     if (action === 'increment') {
                         currentValue = Math.min(max, currentValue + step);
@@ -435,7 +437,7 @@
                     // Fix potential floating point inaccuracies
                     currentValue = parseFloat(currentValue.toFixed(2));
 
-                    valueEl.textContent = `${currentValue} ${unit}`;
+                    valueEl.textContent = `${currentValue}${unit}`;
 
                     // Simulate a 'change' event to trigger saving
                     handleSettingChange({ 
