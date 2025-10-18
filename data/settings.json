@@ -1,16 +1,16 @@
 {
   "large": {
-    "titleFontSize": 6,
-    "participantCountFontSize": 4,
-    "cardSize": 18,
-    "handNameFontSize": 5,
-    "playerNameFontSize": 6
+    "titleFontSize": 8,
+    "participantCountFontSize": 6,
+    "cardSize": 19,
+    "handNameFontSize": 9,
+    "playerNameFontSize": 9
   },
   "small": {
-    "titleFontSize": 4,
-    "participantCountFontSize": 3,
-    "cardSize": 15,
-    "handNameFontSize": 4,
-    "playerNameFontSize": 5
+    "titleFontSize": 7.5,
+    "participantCountFontSize": 7.5,
+    "cardSize": 19,
+    "handNameFontSize": 9,
+    "playerNameFontSize": 8
   }
 }
