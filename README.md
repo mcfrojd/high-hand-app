@@ -92,7 +92,10 @@ npm install pm2 -g
 4. **Starta servern med PM2:**
 - Detta startar servern och ser till att den startas om automatiskt om den skulle krascha.
 ```
-pm2 start server.js --name "high-hand-server" -f
+pm2 delete high-hand-server
+```
+```
+pm2 start server.js --name "high-hand-server"
 ```
 
 5. **Sätt upp PM2 att starta vid omstart av containern:**
@@ -114,3 +117,26 @@ Du når nu din applikation på:
 
 - **Display-sidan:** `http://<LXC_IP_ADRESS>/display.html`
 - **Admin-sidan:** `http://<LXC_IP_ADRESS>/admin.html`
+___
+## The Correct PM2 Workflow
+To avoid this in the future, use the following commands to manage your app once it has been started:
+
+To restart the app:
+```Bash
+pm2 restart high-hand-server
+```
+To reload the app (0-second downtime):
+```Bash
+pm2 reload high-hand-server
+```
+To stop the app:
+```Bash
+pm2 stop high-hand-server
+```
+
+## ⚠️ Important: Check for Errors
+
+```Bash
+pm2 logs high-hand-server
+```
+This will show you any errors in your server.js file that you need to fix.

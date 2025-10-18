@@ -225,7 +225,7 @@ app.get('/api/backgrounds', async (req, res) => {
 
 // --- WEBSOCKET-SERVER ---
 wss.on('connection', (ws) => {
-    console.log('En klient kopplade upp sig.');
+    // console.log('En klient kopplade upp sig.');
 
     ws.on('message', async (message) => {
         try {
@@ -236,7 +236,7 @@ wss.on('connection', (ws) => {
                 const clientType = data.payload.screenType; // 'large' or 'small'
                 if (clientType === 'large' || clientType === 'small') {
                     clientTypes.set(ws, clientType);
-                    console.log(`Klient registrerad som: ${clientType}`);
+                    // console.log(`Klient registrerad som: ${clientType}`);
                     
                     // Send initial state for that type
                     const initialState = {
@@ -267,13 +267,13 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        console.log('En klient kopplade från.');
+        // console.log('En klient kopplade från.');
         clientTypes.delete(ws); // Clean up client type on disconnect
     });
 });
 
 // Starta servern
 server.listen(port, '0.0.0.0', () => {
-  console.log(`Servern körs på http://<din-lokala-ip>:${port}`);
+//   console.log(`Servern körs på http://<din-lokala-ip>:${port}`);
 });
 
