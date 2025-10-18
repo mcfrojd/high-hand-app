@@ -28,9 +28,9 @@ let currentSettings = {};
 // --- DATABAS-FUNKTIONER ---
 
 // Sparar den nuvarande datan till db.json
-function saveDataToFile() {
+async function saveDataToFile() {
     try {
-        fs.writeFileSync(dbFilePath, JSON.stringify(currentHighHand, null, 2), 'utf8');
+        await fs.promises.writeFile(dbFilePath, JSON.stringify(currentHighHand, null, 2), 'utf8');
         console.log('Data sparades till db.json');
     } catch (error) {
         console.error('Kunde inte spara till db.json:', error);
@@ -38,15 +38,15 @@ function saveDataToFile() {
 }
 
 // Läser data från db.json när servern startar
-function readDataFromFile() {
+async function readDataFromFile() {
     try {
         if (fs.existsSync(dbFilePath)) {
-            const data = fs.readFileSync(dbFilePath, 'utf8');
+            const data = await fs.promises.readFile(dbFilePath, 'utf8');
             currentHighHand = JSON.parse(data);
         } else {
             // Skapa en standard high-hand om filen inte finns
             currentHighHand = { playerName: "VÄSTANFORS POKER KLUBB", participantCount: 0, cards: Array(5).fill({ rank: "N/A", suit: "N/A" }), backgroundImage: "/images/backgrounds/room.jpg", updatedAt: new Date().toISOString() };
-            saveDataToFile();
+            await saveDataToFile();
         }
     } catch (error) {
         console.error('Kunde inte läsa från db.json:', error);
@@ -54,10 +54,10 @@ function readDataFromFile() {
 }
 
 // --- SETTINGS-FUNKTIONER ---
-function readSettingsFromFile() {
+async function readSettingsFromFile() {
     try {
         if (fs.existsSync(settingsDbPath)) {
-            const data = fs.readFileSync(settingsDbPath, 'utf8');
+            const data = await fs.promises.readFile(settingsDbPath, 'utf8');
             currentSettings = JSON.parse(data);
             // Ensure structure is correct
             if (!currentSettings.large || !currentSettings.small) {
@@ -69,7 +69,7 @@ function readSettingsFromFile() {
                 large: { titleFontSize: 6, participantCountFontSize: 4, handNameFontSize: 5, playerNameFontSize: 6, cardSize: 18 },
                 small: { titleFontSize: 4, participantCountFontSize: 3, handNameFontSize: 4, playerNameFontSize: 5, cardSize: 15 }
             };
-            saveSettingsToFile();
+            await saveSettingsToFile();
         }
     } catch (error) {
         console.error('Kunde inte läsa från settings.json, återställer till standard:', error);
@@ -78,13 +78,13 @@ function readSettingsFromFile() {
             large: { titleFontSize: 6, participantCountFontSize: 4, handNameFontSize: 5, playerNameFontSize: 6, cardSize: 18 },
             small: { titleFontSize: 4, participantCountFontSize: 3, handNameFontSize: 4, playerNameFontSize: 5, cardSize: 15 }
         };
-        saveSettingsToFile();
+        await saveSettingsToFile();
     }
 }
 
-function saveSettingsToFile() {
+async function saveSettingsToFile() {
     try {
-        fs.writeFileSync(settingsDbPath, JSON.stringify(currentSettings, null, 2), 'utf8');
+        await fs.promises.writeFile(settingsDbPath, JSON.stringify(currentSettings, null, 2), 'utf8');
     } catch (error) {
         console.error('Kunde inte spara till settings.json:', error);
     }
@@ -94,10 +94,10 @@ function saveSettingsToFile() {
 // --- PLAYER-FUNKTIONER ---
 
 // Läser spelare från players.json
-function readPlayersFromFile() {
+async function readPlayersFromFile() {
     try {
         if (fs.existsSync(playersDbPath)) {
-            const data = fs.readFileSync(playersDbPath, 'utf8');
+            const data = await fs.promises.readFile(playersDbPath, 'utf8');
             return JSON.parse(data);
         }
         return []; // Returnera en tom array om filen inte finns
@@ -108,17 +108,19 @@ function readPlayersFromFile() {
 }
 
 // Sparar spelare till players.json
-function savePlayersToFile(players) {
+async function savePlayersToFile(players) {
     try {
-        fs.writeFileSync(playersDbPath, JSON.stringify(players, null, 2), 'utf8');
+        await fs.promises.writeFile(playersDbPath, JSON.stringify(players, null, 2), 'utf8');
     } catch (error) {
         console.error('Kunde inte spara till players.json:', error);
     }
 }
 
 // Läs in datan när servern startar
-readDataFromFile();
-readSettingsFromFile();
+(async () => {
+    await readDataFromFile();
+    await readSettingsFromFile();
+})();
 
 // --- WEBSERVER & API ---
 
@@ -146,25 +148,25 @@ app.get('/api/state', (req, res) => {
 });
 
 // API-endpoint för att hämta listan på spelare
-app.get('/api/players', (req, res) => {
-    const players = readPlayersFromFile();
+app.get('/api/players', async (req, res) => {
+    const players = await readPlayersFromFile();
     res.json(players);
 });
 
 // API-endpoint för att lägga till en ny spelare
-app.post('/api/players', (req, res) => {
+app.post('/api/players', async (req, res) => {
     const { name } = req.body;
     if (!name || typeof name !== 'string' || name.trim() === '') {
         return res.status(400).json({ message: 'Spelarnamn saknas eller är ogiltigt.' });
     }
 
     const trimmedName = name.trim();
-    const players = readPlayersFromFile();
+    const players = await readPlayersFromFile();
 
     // Kontrollera om spelaren redan finns (skiftlägesokänsligt)
     if (!players.some(p => p.toLowerCase() === trimmedName.toLowerCase())) {
         players.push(trimmedName);
-        savePlayersToFile(players);
+        await savePlayersToFile(players);
         console.log(`Spelare tillagd: ${trimmedName}`);
         res.status(201).json({ message: 'Spelare tillagd', name: trimmedName });
     } else {
@@ -178,7 +180,7 @@ app.get('/api/settings', (req, res) => {
 });
 
 // API-endpoint för att uppdatera inställningar
-app.post('/api/settings/:type', (req, res) => {
+app.post('/api/settings/:type', async (req, res) => {
     const { type } = req.params; // 'large' or 'small'
     const newSettings = req.body;
 
@@ -188,7 +190,7 @@ app.post('/api/settings/:type', (req, res) => {
 
     // Validering och sanering kan läggas till här
     currentSettings[type] = { ...currentSettings[type], ...newSettings };
-    saveSettingsToFile();
+    await saveSettingsToFile();
 
     // Skicka uppdaterade inställningar till relevanta display-klienter
     wss.clients.forEach(client => {
@@ -202,16 +204,16 @@ app.post('/api/settings/:type', (req, res) => {
 
 
 // API-endpoint för att hämta listan på bakgrundsbilder
-app.get('/api/backgrounds', (req, res) => {
+app.get('/api/backgrounds', async (req, res) => {
     const backgroundsPath = path.join(__dirname, 'public/images/backgrounds');
     try {
         if (fs.existsSync(backgroundsPath)) {
-            const files = fs.readdirSync(backgroundsPath);
+            const files = await fs.promises.readdir(backgroundsPath);
             const jpgFiles = files.filter(file => file.toLowerCase().endsWith('.jpg'));
             res.json(jpgFiles);
         } else {
             // Skapa mappen om den inte finns
-            fs.mkdirSync(backgroundsPath, { recursive: true });
+            await fs.promises.mkdir(backgroundsPath, { recursive: true });
             res.json([]);
         }
     } catch (error) {
@@ -225,7 +227,7 @@ app.get('/api/backgrounds', (req, res) => {
 wss.on('connection', (ws) => {
     console.log('En klient kopplade upp sig.');
 
-    ws.on('message', (message) => {
+    ws.on('message', async (message) => {
         try {
             const data = JSON.parse(message);
 
@@ -251,7 +253,7 @@ wss.on('connection', (ws) => {
 
             // Uppdatera currentHighHand med den nya datan från admin
             currentHighHand = data;
-            saveDataToFile(); // Spara till db.json
+            await saveDataToFile(); // Spara till db.json
 
             // Skicka den uppdaterade high-hand-datan till alla anslutna klienter
             wss.clients.forEach(client => {
