@@ -46,10 +46,16 @@ async function appendToLog(data) {
         const handName = isReset ? '' : escapeCsvField(data.handName ?? '');
         const playerName = isReset ? '' : escapeCsvField(data.playerName ?? '');
 
-        const row = `${datetime},${type},${participantCount},${handName},${playerName}\n`;
+        const cards = isReset ? ['', '', '', '', ''] : (data.cards ?? []).slice(0, 5).map(c => {
+            if (!c || c.rank === 'N/A' || c.suit === 'N/A') return '';
+            return `${c.rank}${c.suit}`;
+        });
+        while (cards.length < 5) cards.push('');
+
+        const row = `${datetime},${type},${participantCount},${handName},${playerName},${cards.join(',')}\n`;
 
         if (!fs.existsSync(logFilePath)) {
-            await fs.promises.writeFile(logFilePath, 'datetime,type,participantCount,handName,playerName\n', 'utf8');
+            await fs.promises.writeFile(logFilePath, 'datetime,type,participantCount,handName,playerName,card1,card2,card3,card4,card5\n', 'utf8');
         }
         await fs.promises.appendFile(logFilePath, row, 'utf8');
     } catch (error) {

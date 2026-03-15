@@ -75,11 +75,7 @@
             transition: background 0.15s;
         }
 
-        tbody tr:hover {
-            background: #1e2a4a;
-        }
-
-        tbody tr.row-hand td { color: #e0e0e0; }
+        tbody tr:hover { background: #1e2a4a; }
 
         tbody tr.row-reset td {
             color: #555;
@@ -111,6 +107,18 @@
         .col-player { font-weight: 600; color: #f0c040; }
         .col-hand { color: #7eb8f7; }
         .col-participants { text-align: center; }
+
+        .col-cards {
+            white-space: nowrap;
+        }
+
+        .col-cards img {
+            height: 36px;
+            width: auto;
+            margin-right: 2px;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
 
         .no-data {
             text-align: center;
@@ -145,11 +153,12 @@
                 <th>Typ</th>
                 <th>Spelare</th>
                 <th>Hand</th>
+                <th>Kort</th>
                 <th>Deltagare</th>
             </tr>
         </thead>
         <tbody id="logBody">
-            <tr><td colspan="5" class="no-data">Laddar logg...</td></tr>
+            <tr><td colspan="6" class="no-data">Laddar logg...</td></tr>
         </tbody>
     </table>
 
@@ -169,12 +178,10 @@
         function parseCsv(text) {
             const lines = text.trim().split('\n');
             if (lines.length < 2) return [];
-            // skip header (lines[0])
             const rows = [];
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
-                // Simple CSV parse — handles quoted fields
                 const fields = [];
                 let inQuote = false, field = '';
                 for (let j = 0; j < line.length; j++) {
@@ -190,15 +197,22 @@
                 }
                 fields.push(field);
                 rows.push({
-                    datetime: fields[0] || '',
-                    type: fields[1] || '',
+                    datetime:       fields[0] || '',
+                    type:           fields[1] || '',
                     participantCount: fields[2] || '',
-                    handName: fields[3] || '',
-                    playerName: fields[4] || ''
+                    handName:       fields[3] || '',
+                    playerName:     fields[4] || '',
+                    cards: [fields[5], fields[6], fields[7], fields[8], fields[9]].map(c => c || '')
                 });
             }
-            // Newest first
-            return rows.reverse();
+            return rows.reverse(); // Newest first
+        }
+
+        function cardImgHtml(cards) {
+            return cards.map(c => {
+                if (!c) return '';
+                return `<img src="/images/cards/${escapeHtml(c)}.png" alt="${escapeHtml(c)}" title="${escapeHtml(c)}" onerror="this.style.display='none'">`;
+            }).join('');
         }
 
         function renderTable(hideResets) {
@@ -206,7 +220,7 @@
             const rows = hideResets ? allRows.filter(r => r.type !== 'reset') : allRows;
 
             if (rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="no-data">Ingen data i loggen.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">Ingen data i loggen.</td></tr>';
                 document.getElementById('rowCount').textContent = '';
                 return;
             }
@@ -216,7 +230,7 @@
                     return `<tr class="row-reset">
                         <td class="col-datetime">${formatDatetime(r.datetime)}</td>
                         <td><span class="badge-reset">reset</span></td>
-                        <td colspan="3" style="color:#444">— display återställd —</td>
+                        <td colspan="4" style="color:#444">— display återställd —</td>
                     </tr>`;
                 }
                 return `<tr class="row-hand">
@@ -224,6 +238,7 @@
                     <td><span class="badge-hand">hand</span></td>
                     <td class="col-player">${escapeHtml(r.playerName)}</td>
                     <td class="col-hand">${escapeHtml(r.handName)}</td>
+                    <td class="col-cards">${cardImgHtml(r.cards)}</td>
                     <td class="col-participants">${escapeHtml(r.participantCount)}</td>
                 </tr>`;
             }).join('');
@@ -253,7 +268,7 @@
                 renderTable(hideResets);
             } catch (err) {
                 document.getElementById('logBody').innerHTML =
-                    '<tr><td colspan="5" class="no-data">Kunde inte ladda loggfilen.</td></tr>';
+                    '<tr><td colspan="6" class="no-data">Kunde inte ladda loggfilen.</td></tr>';
             }
         }
 
