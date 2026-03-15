@@ -1,0 +1,25 @@
+datetime,type,participantCount,handName,playerName
+2026-01-10T18:04:11.000Z,hand,8,ETT PAR,Andreas Larsson
+2026-01-10T18:41:27.000Z,hand,11,TVÅ PAR,Björn Simonsson
+2026-01-10T19:15:03.000Z,hand,14,TRISS,Bosse Tunell
+2026-01-10T20:02:48.000Z,hand,14,STEGE,Albin Skog
+2026-01-10T20:58:33.000Z,hand,16,FÄRG,Charlie Tornemalm
+2026-01-10T21:44:19.000Z,hand,18,KÅK,Christer Vendel
+2026-01-10T22:30:55.000Z,reset,,,
+2026-01-17T18:11:42.000Z,hand,9,TVÅ PAR,Ali Basboga
+2026-01-17T19:03:17.000Z,hand,12,TRISS,André Andersen
+2026-01-17T19:55:28.000Z,hand,15,STEGE,Azad Gabi
+2026-01-17T21:08:44.000Z,hand,17,STEGE,Herion Zhupa
+2026-01-17T22:01:09.000Z,hand,20,KÅK,Amer Vejo
+2026-01-17T22:49:31.000Z,reset,,,
+2026-01-24T18:22:05.000Z,hand,7,ETT PAR,Bobbo
+2026-01-24T19:14:38.000Z,hand,10,TVÅ PAR,Andreas Dinani
+2026-01-24T20:07:52.000Z,hand,13,FYRTAL,"Håkan 'Sulan' Sulin"
+2026-01-24T21:33:14.000Z,hand,13,FYRTAL,"Håkan 'Sulan' Sulin"
+2026-01-24T22:18:47.000Z,reset,,,
+2026-01-31T18:09:22.000Z,hand,6,ETT PAR,Casper Sandström
+2026-01-31T19:01:55.000Z,hand,11,TRISS,Azad
+2026-01-31T19:58:03.000Z,hand,14,FÄRG,Benny Ripleysandida
+2026-01-31T21:12:39.000Z,hand,17,KÅK,"Janne 'Smygaren' Andersson"
+2026-01-31T22:05:11.000Z,hand,19,FÄRGSTEGE,Albin Skog
+2026-01-31T22:44:28.000Z,reset,,,

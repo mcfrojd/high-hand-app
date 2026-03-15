@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Hand Logg – VPK</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f0c040;
+            font-size: 1.8rem;
+            margin-bottom: 0.4rem;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .controls input[type="checkbox"] {
+            accent-color: #f0c040;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead th {
+            background: #0f3460;
+            color: #f0c040;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #2a2a4a;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: #1e2a4a;
+        }
+
+        tbody tr.row-hand td { color: #e0e0e0; }
+
+        tbody tr.row-reset td {
+            color: #555;
+            font-style: italic;
+        }
+
+        tbody tr.row-reset .badge-reset {
+            background: #3a3a3a;
+            color: #777;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        .badge-hand {
+            background: #1a3a2a;
+            color: #4caf84;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        td {
+            padding: 0.6rem 1rem;
+            vertical-align: middle;
+        }
+
+        .col-datetime { white-space: nowrap; color: #888; font-size: 0.8rem; }
+        .col-player { font-weight: 600; color: #f0c040; }
+        .col-hand { color: #7eb8f7; }
+        .col-participants { text-align: center; }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #555;
+            font-style: italic;
+        }
+
+        .row-count {
+            text-align: right;
+            color: #555;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>HIGH HAND LOGG</h1>
+    <p class="subtitle">Västanfors Poker Klubb</p>
+
+    <div class="controls">
+        <label>
+            <input type="checkbox" id="hideResets" checked>
+            Dölj resets
+        </label>
+    </div>
+
+    <table id="logTable">
+        <thead>
+            <tr>
+                <th>Datum &amp; Tid</th>
+                <th>Typ</th>
+                <th>Spelare</th>
+                <th>Hand</th>
+                <th>Deltagare</th>
+            </tr>
+        </thead>
+        <tbody id="logBody">
+            <tr><td colspan="5" class="no-data">Laddar logg...</td></tr>
+        </tbody>
+    </table>
+
+    <p class="row-count" id="rowCount"></p>
+
+    <script>
+        let allRows = [];
+
+        function formatDatetime(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            const date = d.toLocaleDateString('sv-SE');
+            const time = d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `${date} ${time}`;
+        }
+
+        function parseCsv(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+            // skip header (lines[0])
+            const rows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                // Simple CSV parse — handles quoted fields
+                const fields = [];
+                let inQuote = false, field = '';
+                for (let j = 0; j < line.length; j++) {
+                    const ch = line[j];
+                    if (ch === '"') {
+                        if (inQuote && line[j + 1] === '"') { field += '"'; j++; }
+                        else { inQuote = !inQuote; }
+                    } else if (ch === ',' && !inQuote) {
+                        fields.push(field); field = '';
+                    } else {
+                        field += ch;
+                    }
+                }
+                fields.push(field);
+                rows.push({
+                    datetime: fields[0] || '',
+                    type: fields[1] || '',
+                    participantCount: fields[2] || '',
+                    handName: fields[3] || '',
+                    playerName: fields[4] || ''
+                });
+            }
+            // Newest first
+            return rows.reverse();
+        }
+
+        function renderTable(hideResets) {
+            const tbody = document.getElementById('logBody');
+            const rows = hideResets ? allRows.filter(r => r.type !== 'reset') : allRows;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">Ingen data i loggen.</td></tr>';
+                document.getElementById('rowCount').textContent = '';
+                return;
+            }
+
+            const html = rows.map(r => {
+                if (r.type === 'reset') {
+                    return `<tr class="row-reset">
+                        <td class="col-datetime">${formatDatetime(r.datetime)}</td>
+                        <td><span class="badge-reset">reset</span></td>
+                        <td colspan="3" style="color:#444">— display återställd —</td>
+                    </tr>`;
+                }
+                return `<tr class="row-hand">
+                    <td class="col-datetime">${formatDatetime(r.datetime)}</td>
+                    <td><span class="badge-hand">hand</span></td>
+                    <td class="col-player">${escapeHtml(r.playerName)}</td>
+                    <td class="col-hand">${escapeHtml(r.handName)}</td>
+                    <td class="col-participants">${escapeHtml(r.participantCount)}</td>
+                </tr>`;
+            }).join('');
+
+            tbody.innerHTML = html;
+
+            const handCount = rows.filter(r => r.type === 'hand').length;
+            const resetCount = rows.filter(r => r.type === 'reset').length;
+            document.getElementById('rowCount').textContent =
+                `Visar ${rows.length} rad${rows.length !== 1 ? 'er' : ''} (${handCount} händer${hideResets ? '' : ', ' + resetCount + ' resets'})`;
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        async function loadLog() {
+            try {
+                const res = await fetch('/api/log');
+                const text = await res.text();
+                allRows = parseCsv(text);
+                const hideResets = document.getElementById('hideResets').checked;
+                renderTable(hideResets);
+            } catch (err) {
+                document.getElementById('logBody').innerHTML =
+                    '<tr><td colspan="5" class="no-data">Kunde inte ladda loggfilen.</td></tr>';
+            }
+        }
+
+        document.getElementById('hideResets').addEventListener('change', (e) => {
+            renderTable(e.target.checked);
+        });
+
+        loadLog();
+    </script>
+</body>
+</html>

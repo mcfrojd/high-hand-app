@@ -20,10 +20,42 @@ const clientTypes = new Map();
 const dbFilePath = path.join(__dirname, 'data', 'db.json');
 const playersDbPath = path.join(__dirname, 'data', 'players.json');
 const settingsDbPath = path.join(__dirname, 'data', 'settings.json');
+const logFilePath = path.join(__dirname, 'data', 'highhand_log.csv');
 
 // Start-data ifall filer är tomma eller inte finns
 let currentHighHand = {};
 let currentSettings = {};
+
+// --- LOGG-FUNKTIONER ---
+
+function escapeCsvField(field) {
+    if (field === null || field === undefined) return '';
+    const str = String(field);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+}
+
+async function appendToLog(data) {
+    try {
+        const isReset = data.reset === true;
+        const datetime = new Date().toISOString();
+        const type = isReset ? 'reset' : 'hand';
+        const participantCount = isReset ? '' : (data.participantCount ?? '');
+        const handName = isReset ? '' : escapeCsvField(data.handName ?? '');
+        const playerName = isReset ? '' : escapeCsvField(data.playerName ?? '');
+
+        const row = `${datetime},${type},${participantCount},${handName},${playerName}\n`;
+
+        if (!fs.existsSync(logFilePath)) {
+            await fs.promises.writeFile(logFilePath, 'datetime,type,participantCount,handName,playerName\n', 'utf8');
+        }
+        await fs.promises.appendFile(logFilePath, row, 'utf8');
+    } catch (error) {
+        console.error('Kunde inte skriva till loggfilen:', error);
+    }
+}
 
 // --- DATABAS-FUNKTIONER ---
 
@@ -203,6 +235,18 @@ app.post('/api/settings/:type', async (req, res) => {
 });
 
 
+// API-endpoint för att hämta loggfilen
+app.get('/api/log', (req, res) => {
+    if (fs.existsSync(logFilePath)) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.sendFile(logFilePath);
+    } else {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.send('datetime,type,participantCount,handName,playerName\n');
+    }
+});
+
+
 // API-endpoint för att hämta listan på bakgrundsbilder
 app.get('/api/backgrounds', async (req, res) => {
     const backgroundsPath = path.join(__dirname, 'public/images/backgrounds');
@@ -254,6 +298,7 @@ wss.on('connection', (ws) => {
             // Uppdatera currentHighHand med den nya datan från admin
             currentHighHand = data;
             await saveDataToFile(); // Spara till db.json
+            await appendToLog(data); // Logga till CSV
 
             // Skicka den uppdaterade high-hand-datan till alla anslutna klienter
             wss.clients.forEach(client => {
