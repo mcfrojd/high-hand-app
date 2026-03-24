@@ -304,7 +304,7 @@ wss.on('connection', (ws) => {
             // Uppdatera currentHighHand med den nya datan från admin
             currentHighHand = data;
             await saveDataToFile(); // Spara till db.json
-            await appendToLog(data); // Logga till CSV
+            if (data.isFinalSubmit || data.reset) await appendToLog(data); // Logga till CSV
 
             // Skicka den uppdaterade high-hand-datan till alla anslutna klienter
             wss.clients.forEach(client => {

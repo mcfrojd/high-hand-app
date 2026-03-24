@@ -209,6 +209,7 @@
                 playerName,
                 participantCount: parseInt(participantCount, 10) || 0,
                 cards,
+                handName: handRankDisplay.textContent,
                 backgroundImage,
                 updatedAt: new Date().toISOString()
             };
@@ -263,7 +264,7 @@
             const cards = [];
             for (let i = 1; i <= 5; i++) { cards.push({ rank: document.getElementById(`card-rank-${i}`).value, suit: document.getElementById(`card-suit-${i}`).value }); }
             const backgroundImage = backgroundSelect.value; // This is now just the filename
-            const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
+            const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, handName: handRankDisplay.textContent, backgroundImage, updatedAt: new Date().toISOString() };
 
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify(dataToSave));
@@ -661,8 +662,8 @@
                 const cards = [];
                 for (let i = 1; i <= 5; i++) { cards.push({ rank: document.getElementById(`card-rank-${i}`).value, suit: document.getElementById(`card-suit-${i}`).value }); }
                 const backgroundImage = backgroundSelect.value; // This is now just the filename
-                const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, backgroundImage, updatedAt: new Date().toISOString() };
-                
+                const dataToSave = { playerName, participantCount: parseInt(participantCount, 10) || 0, cards, handName: handRankDisplay.textContent, backgroundImage, updatedAt: new Date().toISOString(), isFinalSubmit: true };
+
                 if (socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify(dataToSave)); // This now sends a generic message
                     statusMessage.textContent = 'Högsta handen har uppdaterats!';
