@@ -208,10 +208,24 @@
             return rows.reverse(); // Newest first
         }
 
+        function cardToFilename(c) {
+            if (!c) return null;
+            const rankMap = { 'A': 'a', 'K': 'k', 'Q': 'q', 'J': 'j' };
+            const suitMap = { '♠': 's', '♥': 'h', '♦': 'r', '♣': 'k' };
+            const suit = c.slice(-1);
+            const rank = c.slice(0, -1);
+            const rankStr = rankMap[rank] || rank.toLowerCase();
+            const suitStr = suitMap[suit];
+            if (!suitStr) return null;
+            return rankStr + suitStr;
+        }
+
         function cardImgHtml(cards) {
             return cards.map(c => {
                 if (!c) return '';
-                return `<img src="/images/cards/${escapeHtml(c)}.png" alt="${escapeHtml(c)}" title="${escapeHtml(c)}" onerror="this.style.display='none'">`;
+                const filename = cardToFilename(c);
+                if (!filename) return '';
+                return `<img src="/images/cards/${filename}.png" alt="${escapeHtml(c)}" title="${escapeHtml(c)}" onerror="this.style.display='none'">`;
             }).join('');
         }
 
