@@ -3,6 +3,24 @@ const express = require('express');
 const WebSocket = require('ws');
 const path = require('path');
 const http = require('http');
+const https = require('https');
+const { URL } = require('url');
+
+// Läs .env utan externa beroenden
+(function loadEnv() {
+    const envPath = path.join(__dirname, '.env');
+    if (!fs.existsSync(envPath)) return;
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx < 1) continue;
+        const key = trimmed.slice(0, idx).trim();
+        const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!(key in process.env)) process.env[key] = val;
+    }
+})();
 
 const app = express();
 const port = 80;
@@ -160,6 +178,90 @@ async function savePlayersToFile(players) {
     await readSettingsFromFile();
 })();
 
+// --- VPK PUSH-FUNKTION ---
+
+let vpkToken = null;
+
+function httpRequest(method, urlStr, headers, body) {
+    return new Promise((resolve, reject) => {
+        const parsed = new URL(urlStr);
+        const isHttps = parsed.protocol === 'https:';
+        const options = {
+            hostname: parsed.hostname,
+            port: parsed.port || (isHttps ? 443 : 80),
+            path: parsed.pathname + parsed.search,
+            method,
+            headers
+        };
+        const req = (isHttps ? https : http).request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve({ status: res.statusCode, body: data }));
+        });
+        req.on('error', reject);
+        if (body) req.write(body);
+        req.end();
+    });
+}
+
+async function authenticateVpk() {
+    const body = JSON.stringify({ identity: process.env.VPK_PB_EMAIL, password: process.env.VPK_PB_PASSWORD });
+    const res = await httpRequest('POST', `${process.env.VPK_PB_URL}/collections/users/auth-with-password`, {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+    }, body);
+    const json = JSON.parse(res.body);
+    if (!json.token) throw new Error(`VPK auth failed: ${res.body}`);
+    vpkToken = json.token;
+}
+
+async function pushToVpk(data) {
+    try {
+        const { VPK_PB_URL, VPK_PB_EMAIL, VPK_PB_PASSWORD, VPK_HIGH_HAND_RECORD_ID } = process.env;
+        if (!VPK_PB_URL || !VPK_PB_EMAIL || !VPK_PB_PASSWORD || !VPK_HIGH_HAND_RECORD_ID) return;
+
+        if (!vpkToken) await authenticateVpk();
+
+        const payload = data.reset
+            ? { reset: true, source_updated_at: new Date().toISOString() }
+            : {
+                player_name: data.playerName ?? '',
+                hand_name: data.handName ?? '',
+                cards: JSON.stringify(data.cards ?? []),
+                participant_count: data.participantCount ?? 0,
+                is_final_submit: data.isFinalSubmit ?? false,
+                source_updated_at: new Date().toISOString(),
+                reset: false
+            };
+
+        const body = JSON.stringify(payload);
+        const patchUrl = `${VPK_PB_URL}/collections/high_hand/records/${VPK_HIGH_HAND_RECORD_ID}`;
+        const res = await httpRequest('PATCH', patchUrl, {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body),
+            'Authorization': `Bearer ${vpkToken}`
+        }, body);
+
+        if (res.status === 401) {
+            // Token expired — re-authenticate once and retry
+            vpkToken = null;
+            await authenticateVpk();
+            const res2 = await httpRequest('PATCH', patchUrl, {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body),
+                'Authorization': `Bearer ${vpkToken}`
+            }, body);
+            if (res2.status < 200 || res2.status >= 300) {
+                console.error(`VPK push misslyckades (${res2.status}): ${res2.body}`);
+            }
+        } else if (res.status < 200 || res.status >= 300) {
+            console.error(`VPK push misslyckades (${res.status}): ${res.body}`);
+        }
+    } catch (err) {
+        console.error('VPK push fel:', err.message);
+    }
+}
+
 // --- WEBSERVER & API ---
 
 // Serverar statiska filer från 'public'-mappen
@@ -312,6 +414,9 @@ wss.on('connection', (ws) => {
                     client.send(JSON.stringify({ type: 'handUpdate', payload: currentHighHand }));
                 }
             });
+
+            // Pusha till VPK-appen (asynkront, blockerar inte)
+            pushToVpk(data);
         } catch (error) {
             console.error('Fel vid hantering av meddelande:', error);
         }

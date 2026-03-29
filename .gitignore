@@ -1,1 +1,6 @@
 node_modules
+db.json
+highhand_log.csv
+players.json
+data/settings.json
+.env
